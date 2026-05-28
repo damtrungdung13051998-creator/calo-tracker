@@ -81,7 +81,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 .srow button{padding:8px 12px;font-size:13px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--text2);cursor:pointer}
 
 /* Food grid */
-.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:200px;overflow-y:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:260px;overflow-y:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch}
 .ex-grid{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch}
 .ex-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);cursor:pointer;transition:all .15s}
 .ex-card:active{transform:scale(0.98)}
@@ -212,7 +212,7 @@ hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
   <div class="sec">Chọn từ thư viện thực phẩm</div>
   <div class="cats" id="food-cats"></div>
   <div class="srow">
-    <input type="text" id="food-search" placeholder="Tìm thực phẩm..." oninput="filterFoods()">
+    <input type="text" id="food-search" placeholder="Tìm (không dấu OK)... vd: com, ga, whey" oninput="filterFoods()">
     <button onclick="document.getElementById('food-search').value='';filterFoods()">Xoá</button>
   </div>
   <div class="fgrid" id="food-grid"></div>
@@ -244,7 +244,7 @@ hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
   <div class="sec">Chọn hoạt động — tự tính theo cân nặng & thời gian</div>
   <div class="cats" id="ex-cats"></div>
   <div class="srow">
-    <input type="text" id="ex-search" placeholder="🔍 Tìm hoạt động..." oninput="filterExercises()">
+    <input type="text" id="ex-search" placeholder="🔍 Tìm (không dấu OK)... vd: chay, gym" oninput="filterExercises()">
     <button onclick="document.getElementById('ex-search').value='';filterExercises()">Xoá</button>
   </div>
   <div class="ex-grid" id="ex-grid"></div>
@@ -280,73 +280,393 @@ hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
 <script>
 // ─── FOOD LIBRARY ───────────────────────────────────────
 const FOODS = [
-  {id:'com',name:'Cơm trắng',cat:'tinh-bot',unit:'g',kcal:130,note:'per 100g'},
-  {id:'com-bat',name:'Bát cơm (đầy)',cat:'tinh-bot',unit:'bát',kcal:200,note:'~150g',fixed:1},
-  {id:'banh-mi',name:'Bánh mì',cat:'tinh-bot',unit:'g',kcal:265,note:'per 100g'},
-  {id:'bun',name:'Bún tươi',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
-  {id:'pho',name:'Bánh phở',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
-  {id:'mi-goi',name:'Mì gói (1 gói)',cat:'tinh-bot',unit:'gói',kcal:350,note:'~75g',fixed:1},
-  {id:'khoai-lang',name:'Khoai lang luộc',cat:'tinh-bot',unit:'g',kcal:86,note:'per 100g'},
-  {id:'xoi',name:'Xôi trắng',cat:'tinh-bot',unit:'g',kcal:175,note:'per 100g'},
-
-  {id:'trung-ga-luoc',name:'Trứng gà luộc',cat:'trung',unit:'quả',kcal:68,note:'~50g/quả',fixed:1},
-  {id:'trung-chien',name:'Trứng chiên',cat:'trung',unit:'quả',kcal:95,note:'~50g',fixed:1},
-  {id:'trung-vit',name:'Trứng vịt luộc',cat:'trung',unit:'quả',kcal:130,note:'~65g/quả',fixed:1},
-
-  {id:'uc-ga',name:'Ức gà (không da)',cat:'ga',unit:'g',kcal:165,note:'per 100g luộc'},
-  {id:'dui-ga',name:'Đùi gà (không da)',cat:'ga',unit:'g',kcal:180,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🍗 GÀ
+  // ══════════════════════════════════════════════════════
+  {id:'uc-ga-song',name:'Ức gà sống (không da)',cat:'ga',unit:'g',kcal:120,note:'per 100g – USDA 5064'},
+  {id:'uc-ga-luoc',name:'Ức gà luộc (không da)',cat:'ga',unit:'g',kcal:165,note:'per 100g – USDA cooked'},
+  {id:'uc-ga-ap-chao',name:'Ức gà áp chảo',cat:'ga',unit:'g',kcal:190,note:'per 100g – thêm 1 muỗng dầu'},
+  {id:'dui-ga-co-da',name:'Đùi gà (có da)',cat:'ga',unit:'g',kcal:215,note:'per 100g – USDA 5099'},
+  {id:'dui-ga-khong-da',name:'Đùi gà (không da)',cat:'ga',unit:'g',kcal:180,note:'per 100g'},
+  {id:'canh-ga',name:'Cánh gà (có da)',cat:'ga',unit:'g',kcal:220,note:'per 100g – USDA 5104'},
+  {id:'da-ga',name:'Da gà (chiên)',cat:'ga',unit:'g',kcal:520,note:'per 100g – cao chất béo'},
+  {id:'ga-quay',name:'Gà quay (có da)',cat:'ga',unit:'g',kcal:239,note:'per 100g – USDA rotisserie'},
+  {id:'ga-ran',name:'Gà rán (tẩm bột, chiên)',cat:'ga',unit:'g',kcal:260,note:'per 100g'},
+  {id:'ga-xe',name:'Gà xé (không da)',cat:'ga',unit:'g',kcal:155,note:'per 100g – luộc xé sợi'},
+  {id:'ga-tam-bot',name:'Gà tẩm bột chiên',cat:'ga',unit:'g',kcal:280,note:'per 100g – lớp bột dày'},
   {id:'chan-ga-luoc',name:'Chân gà luộc',cat:'ga',unit:'chiếc',kcal:61,note:'~28g/chiếc',fixed:1},
-  {id:'ga-ta',name:'Gà ta luộc (có da)',cat:'ga',unit:'g',kcal:199,note:'per 100g'},
-  {id:'canh-ga',name:'Cánh gà',cat:'ga',unit:'g',kcal:220,note:'per 100g có da'},
+  {id:'ga-ta-luoc',name:'Gà ta luộc (có da)',cat:'ga',unit:'g',kcal:199,note:'per 100g'},
 
-  {id:'thit-than',name:'Thịt lợn thăn',cat:'lon',unit:'g',kcal:143,note:'per 100g nạc'},
-  {id:'ba-chi',name:'Thịt ba chỉ',cat:'lon',unit:'g',kcal:260,note:'per 100g'},
-  {id:'suon-lon',name:'Sườn lợn',cat:'lon',unit:'g',kcal:280,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🐄 BÒ
+  // ══════════════════════════════════════════════════════
+  {id:'than-bo',name:'Thăn bò (tenderloin)',cat:'bo',unit:'g',kcal:185,note:'per 100g – USDA 23557'},
+  {id:'bap-bo',name:'Bắp bò',cat:'bo',unit:'g',kcal:200,note:'per 100g'},
+  {id:'nam-bo',name:'Nạm bò',cat:'bo',unit:'g',kcal:195,note:'per 100g – flank'},
+  {id:'bo-xao',name:'Bò xào rau củ',cat:'bo',unit:'g',kcal:180,note:'per 100g – ước tính'},
+  {id:'bo-luc-lac',name:'Bò lúc lắc',cat:'bo',unit:'g',kcal:220,note:'per 100g – có bơ tỏi'},
+  {id:'thit-bo-kho',name:'Thịt bò khô',cat:'bo',unit:'g',kcal:300,note:'per 100g – beef jerky USDA'},
+  {id:'beef-steak',name:'Beef steak (medium)',cat:'bo',unit:'g',kcal:220,note:'per 100g – sirloin grilled'},
+  {id:'bo-wagyu',name:'Bò wagyu',cat:'bo',unit:'g',kcal:290,note:'per 100g – mỡ giắt cao'},
+  {id:'bo-nac',name:'Thịt bò nạc xay',cat:'bo',unit:'g',kcal:215,note:'per 100g – ground 90% lean'},
+  {id:'bo-vien',name:'Bò viên',cat:'bo',unit:'viên',kcal:30,note:'~14g/viên',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🐷 HEO / LỢN
+  // ══════════════════════════════════════════════════════
+  {id:'nac-heo',name:'Thịt nạc heo',cat:'lon',unit:'g',kcal:143,note:'per 100g – USDA loin'},
+  {id:'ba-chi',name:'Ba chỉ heo',cat:'lon',unit:'g',kcal:400,note:'per 100g – USDA belly raw'},
+  {id:'suon-heo',name:'Sườn heo',cat:'lon',unit:'g',kcal:280,note:'per 100g – spareribs'},
+  {id:'than-heo',name:'Thăn heo',cat:'lon',unit:'g',kcal:150,note:'per 100g – pork tenderloin'},
+  {id:'mo-heo',name:'Mỡ heo (thuần)',cat:'lon',unit:'g',kcal:812,note:'per 100g – lard USDA'},
+  {id:'chan-gio',name:'Chân giò heo',cat:'lon',unit:'g',kcal:275,note:'per 100g – kể cả da'},
+  {id:'thit-xay-heo',name:'Thịt heo xay',cat:'lon',unit:'g',kcal:263,note:'per 100g – ground pork'},
+  {id:'xuc-xich',name:'Xúc xích',cat:'lon',unit:'chiếc',kcal:120,note:'~40g/chiếc Frankfurt',fixed:1},
   {id:'gio-lua',name:'Giò lụa',cat:'lon',unit:'g',kcal:224,note:'per 100g'},
+  {id:'thit-nguoi',name:'Thịt nguội (ham)',cat:'lon',unit:'g',kcal:145,note:'per 100g – deli ham USDA'},
 
-  {id:'bo-than',name:'Thịt bò thăn',cat:'bo',unit:'g',kcal:182,note:'per 100g'},
-  {id:'bo-bap',name:'Thịt bò bắp',cat:'bo',unit:'g',kcal:200,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🦆 VỊT
+  // ══════════════════════════════════════════════════════
+  {id:'vit-luoc-bo-da',name:'Vịt luộc (bỏ da)',cat:'vit',unit:'g',kcal:135,note:'per 100g'},
+  {id:'vit-luoc-co-da',name:'Vịt luộc (có da)',cat:'vit',unit:'g',kcal:220,note:'per 100g'},
+  {id:'vit-quay',name:'Vịt quay (có da)',cat:'vit',unit:'g',kcal:338,note:'per 100g – USDA 5142'},
 
-  {id:'vit-luoc',name:'Vịt luộc (bỏ da)',cat:'vit',unit:'g',kcal:135,note:'per 100g'},
-  {id:'vit-co-da',name:'Vịt luộc (có da)',cat:'vit',unit:'g',kcal:220,note:'per 100g'},
-  {id:'vit-quay',name:'Vịt quay',cat:'vit',unit:'g',kcal:190,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🐟 HẢI SẢN
+  // ══════════════════════════════════════════════════════
+  {id:'ca-hoi',name:'Cá hồi (Atlantic)',cat:'hai-san',unit:'g',kcal:208,note:'per 100g – USDA 15236'},
+  {id:'ca-ngu',name:'Cá ngừ tươi',cat:'hai-san',unit:'g',kcal:144,note:'per 100g – USDA 15221'},
+  {id:'ca-ngu-hop',name:'Cá ngừ hộp (nước)',cat:'hai-san',unit:'g',kcal:116,note:'per 100g – drained'},
+  {id:'ca-basa',name:'Cá basa phi lê',cat:'hai-san',unit:'g',kcal:90,note:'per 100g'},
+  {id:'ca-ro-phi',name:'Cá rô phi',cat:'hai-san',unit:'g',kcal:96,note:'per 100g – USDA 15262'},
+  {id:'ca-thu',name:'Cá thu',cat:'hai-san',unit:'g',kcal:205,note:'per 100g – USDA 15046'},
+  {id:'tom-hap',name:'Tôm hấp',cat:'hai-san',unit:'g',kcal:99,note:'per 100g – USDA 15149'},
+  {id:'cua',name:'Cua (thịt)',cat:'hai-san',unit:'g',kcal:97,note:'per 100g – USDA 15139'},
+  {id:'ghe',name:'Ghẹ',cat:'hai-san',unit:'g',kcal:87,note:'per 100g – blue crab'},
+  {id:'muc-ong',name:'Mực ống',cat:'hai-san',unit:'g',kcal:92,note:'per 100g – USDA 15175'},
+  {id:'bach-tuoc',name:'Bạch tuộc',cat:'hai-san',unit:'g',kcal:82,note:'per 100g – USDA 15167'},
+  {id:'hau',name:'Hàu',cat:'hai-san',unit:'g',kcal:69,note:'per 100g – USDA 15169'},
+  {id:'ngao',name:'Ngao / Hến',cat:'hai-san',unit:'g',kcal:74,note:'per 100g – clams USDA'},
+  {id:'so-huyet',name:'Sò huyết',cat:'hai-san',unit:'con',kcal:9,note:'~12g/con',fixed:1},
 
-  {id:'ca-hoi',name:'Cá hồi',cat:'hai-san',unit:'g',kcal:208,note:'per 100g'},
-  {id:'ca-ngu',name:'Cá ngừ',cat:'hai-san',unit:'g',kcal:144,note:'per 100g'},
-  {id:'tom-hap',name:'Tôm hấp',cat:'hai-san',unit:'g',kcal:99,note:'per 100g'},
-  {id:'muc',name:'Mực',cat:'hai-san',unit:'g',kcal:92,note:'per 100g'},
-  {id:'ca-tra',name:'Cá tra phi lê',cat:'hai-san',unit:'g',kcal:90,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🥚 TRỨNG
+  // ══════════════════════════════════════════════════════
+  {id:'trung-ga-luoc',name:'Trứng gà luộc',cat:'trung',unit:'quả',kcal:68,note:'~50g/quả – USDA 01129',fixed:1},
+  {id:'trung-ga-chien',name:'Trứng gà chiên',cat:'trung',unit:'quả',kcal:95,note:'~50g + dầu',fixed:1},
+  {id:'long-do',name:'Lòng đỏ trứng gà',cat:'trung',unit:'quả',kcal:55,note:'~17g/lòng đỏ',fixed:1},
+  {id:'long-trang',name:'Lòng trắng trứng gà',cat:'trung',unit:'quả',kcal:17,note:'~33g/lòng trắng',fixed:1},
+  {id:'trung-vit-luoc',name:'Trứng vịt luộc',cat:'trung',unit:'quả',kcal:130,note:'~65g/quả',fixed:1},
+  {id:'trung-cut',name:'Trứng cút luộc',cat:'trung',unit:'quả',kcal:14,note:'~9g/quả',fixed:1},
+  {id:'trung-muoi',name:'Trứng muối',cat:'trung',unit:'quả',kcal:215,note:'~70g/quả – muối ngấm',fixed:1},
 
-  {id:'bia-330',name:'Bia (lon 330ml)',cat:'uong',unit:'lon',kcal:143,note:'330ml',fixed:1},
+  // ══════════════════════════════════════════════════════
+  // 🍚 CƠM / TINH BỘT
+  // ══════════════════════════════════════════════════════
+  {id:'com-trang',name:'Cơm trắng',cat:'tinh-bot',unit:'g',kcal:130,note:'per 100g nấu chín – USDA'},
+  {id:'com-bat',name:'Bát cơm (đầy)',cat:'tinh-bot',unit:'bát',kcal:200,note:'~150g',fixed:1},
+  {id:'com-gao-lut',name:'Cơm gạo lứt',cat:'tinh-bot',unit:'g',kcal:111,note:'per 100g nấu chín – USDA'},
+  {id:'com-chien',name:'Cơm chiên trứng',cat:'tinh-bot',unit:'g',kcal:160,note:'per 100g – ước tính'},
+  {id:'chao-trang',name:'Cháo trắng',cat:'tinh-bot',unit:'g',kcal:40,note:'per 100g – loãng'},
+  {id:'xoi-trang',name:'Xôi trắng',cat:'tinh-bot',unit:'g',kcal:175,note:'per 100g – USDA 20067'},
+  {id:'xoi-ga',name:'Xôi gà',cat:'tinh-bot',unit:'suất',kcal:420,note:'1 suất ~250g',fixed:1},
+  {id:'xoi-xeo',name:'Xôi xéo',cat:'tinh-bot',unit:'suất',kcal:390,note:'1 suất ~200g',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🍜 BÚN / PHỞ / MÌ
+  // ══════════════════════════════════════════════════════
+  {id:'bun-tuoi',name:'Bún tươi',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
+  {id:'banh-pho',name:'Bánh phở (tươi)',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
+  {id:'mi-goi',name:'Mì gói (1 gói)',cat:'tinh-bot',unit:'gói',kcal:350,note:'~75g/gói – Hảo Hảo, Masan',fixed:1},
+  {id:'nui',name:'Nui nấu chín',cat:'tinh-bot',unit:'g',kcal:131,note:'per 100g – elbow macaroni'},
+  {id:'pasta-chin',name:'Pasta nấu chín',cat:'tinh-bot',unit:'g',kcal:131,note:'per 100g – spaghetti USDA'},
+  {id:'udon',name:'Mì udon nấu chín',cat:'tinh-bot',unit:'g',kcal:132,note:'per 100g'},
+  {id:'mien',name:'Miến dong nấu chín',cat:'tinh-bot',unit:'g',kcal:84,note:'per 100g'},
+  {id:'hu-tieu',name:'Hủ tiếu (sợi khô, nấu chín)',cat:'tinh-bot',unit:'g',kcal:110,note:'per 100g'},
+
+  // ══════════════════════════════════════════════════════
+  // 🥔 KHOAI
+  // ══════════════════════════════════════════════════════
+  {id:'khoai-lang-luoc',name:'Khoai lang luộc',cat:'tinh-bot',unit:'g',kcal:86,note:'per 100g – USDA 11507'},
+  {id:'khoai-tay-luoc',name:'Khoai tây luộc',cat:'tinh-bot',unit:'g',kcal:77,note:'per 100g – USDA 11354'},
+  {id:'khoai-mon',name:'Khoai môn luộc',cat:'tinh-bot',unit:'g',kcal:112,note:'per 100g – USDA 11518'},
+  {id:'khoai-so',name:'Khoai sọ',cat:'tinh-bot',unit:'g',kcal:94,note:'per 100g'},
+  {id:'khoai-nghien',name:'Khoai tây nghiền',cat:'tinh-bot',unit:'g',kcal:83,note:'per 100g – có bơ sữa'},
+  {id:'khoai-chien',name:'Khoai tây chiên (fries)',cat:'tinh-bot',unit:'g',kcal:312,note:'per 100g – USDA fast food'},
+
+  // ══════════════════════════════════════════════════════
+  // 🍞 BÁNH
+  // ══════════════════════════════════════════════════════
+  {id:'banh-mi-trang',name:'Bánh mì trắng',cat:'tinh-bot',unit:'g',kcal:265,note:'per 100g – USDA 18069'},
+  {id:'banh-mi-cam',name:'Bánh mì nguyên cám',cat:'tinh-bot',unit:'g',kcal:247,note:'per 100g – USDA 18075'},
+  {id:'croissant',name:'Croissant',cat:'tinh-bot',unit:'chiếc',kcal:231,note:'~57g/chiếc – USDA 18524',fixed:1},
+  {id:'pizza-slice',name:'Pizza (1 miếng)',cat:'tinh-bot',unit:'miếng',kcal:285,note:'~107g – cheese pizza',fixed:1},
+  {id:'hamburger-bun',name:'Bánh hamburger bun',cat:'tinh-bot',unit:'ổ',kcal:120,note:'~43g',fixed:1},
+  {id:'donut',name:'Donut (có nhân)',cat:'tinh-bot',unit:'chiếc',kcal:253,note:'~60g – USDA 18248',fixed:1},
+  {id:'banh-ngot',name:'Bánh ngọt / Cake',cat:'tinh-bot',unit:'g',kcal:340,note:'per 100g – chocolate cake avg'},
+  {id:'sandwich',name:'Sandwich (2 lát bánh + nhân)',cat:'tinh-bot',unit:'cái',kcal:350,note:'~140g – ước tính',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🥦 RAU XANH
+  // ══════════════════════════════════════════════════════
+  {id:'rau-muong',name:'Rau muống (sống)',cat:'rau',unit:'g',kcal:19,note:'per 100g – USDA 11640'},
+  {id:'cai-ngot',name:'Cải ngọt',cat:'rau',unit:'g',kcal:13,note:'per 100g'},
+  {id:'cai-xanh',name:'Cải xanh',cat:'rau',unit:'g',kcal:25,note:'per 100g – mustard greens'},
+  {id:'cai-bo-xoi',name:'Cải bó xôi (spinach)',cat:'rau',unit:'g',kcal:23,note:'per 100g – USDA 11457'},
+  {id:'xa-lach',name:'Xà lách (lettuce)',cat:'rau',unit:'g',kcal:15,note:'per 100g – USDA 11251'},
+  {id:'rau-mong-toi',name:'Rau mồng tơi',cat:'rau',unit:'g',kcal:19,note:'per 100g'},
+  {id:'rau-den',name:'Rau dền (amaranth)',cat:'rau',unit:'g',kcal:23,note:'per 100g'},
+  {id:'rau-ngot',name:'Rau ngót',cat:'rau',unit:'g',kcal:46,note:'per 100g – nhiều protein rau'},
+  {id:'bap-cai',name:'Bắp cải trắng',cat:'rau',unit:'g',kcal:25,note:'per 100g – USDA 11109'},
+  {id:'sup-lo-xanh',name:'Súp lơ xanh (broccoli)',cat:'rau',unit:'g',kcal:34,note:'per 100g – USDA 11090'},
+  {id:'sup-lo-trang',name:'Súp lơ trắng',cat:'rau',unit:'g',kcal:25,note:'per 100g – USDA 11135'},
+  {id:'dau-bap',name:'Đậu bắp',cat:'rau',unit:'g',kcal:33,note:'per 100g – okra'},
+  {id:'gia-do',name:'Giá đỗ',cat:'rau',unit:'g',kcal:30,note:'per 100g – bean sprouts'},
+  {id:'nam-huong',name:'Nấm hương',cat:'rau',unit:'g',kcal:34,note:'per 100g – shiitake'},
+  {id:'nam-rom',name:'Nấm rơm',cat:'rau',unit:'g',kcal:22,note:'per 100g – straw mushroom'},
+
+  // ══════════════════════════════════════════════════════
+  // 🥕 CỦ QUẢ
+  // ══════════════════════════════════════════════════════
+  {id:'ca-rot',name:'Cà rốt',cat:'rau',unit:'g',kcal:41,note:'per 100g – USDA 11124'},
+  {id:'cu-cai-trang',name:'Củ cải trắng',cat:'rau',unit:'g',kcal:18,note:'per 100g – daikon'},
+  {id:'bi-do',name:'Bí đỏ',cat:'rau',unit:'g',kcal:26,note:'per 100g – USDA 11422'},
+  {id:'bi-xanh',name:'Bí xanh',cat:'rau',unit:'g',kcal:17,note:'per 100g – USDA 11477'},
+  {id:'dua-leo',name:'Dưa leo / chuột',cat:'rau',unit:'g',kcal:16,note:'per 100g – USDA 11206'},
+  {id:'ca-chua',name:'Cà chua',cat:'rau',unit:'g',kcal:18,note:'per 100g – USDA 11529'},
+  {id:'hanh-tay',name:'Hành tây',cat:'rau',unit:'g',kcal:40,note:'per 100g – USDA 11282'},
+  {id:'toi',name:'Tỏi',cat:'rau',unit:'tép',kcal:4,note:'~3g/tép',fixed:1},
+  {id:'gung',name:'Gừng',cat:'rau',unit:'g',kcal:80,note:'per 100g – USDA 11216'},
+  {id:'ot-chuong',name:'Ớt chuông',cat:'rau',unit:'g',kcal:31,note:'per 100g – bell pepper'},
+  {id:'bap-non',name:'Bắp ngô non',cat:'rau',unit:'bắp',kcal:88,note:'~90g/bắp',fixed:1},
+  {id:'bap-ngu-coc',name:'Bắp ngô hạt (luộc)',cat:'rau',unit:'g',kcal:86,note:'per 100g – USDA 11167'},
+
+  // ══════════════════════════════════════════════════════
+  // 🍌 TRÁI CÂY
+  // ══════════════════════════════════════════════════════
+  {id:'chuoi',name:'Chuối già',cat:'trai-cay',unit:'quả',kcal:105,note:'~120g/quả – USDA 09040',fixed:1},
+  {id:'tao-do',name:'Táo đỏ',cat:'trai-cay',unit:'quả',kcal:95,note:'~182g/quả – USDA 09003',fixed:1},
+  {id:'cam',name:'Cam',cat:'trai-cay',unit:'quả',kcal:62,note:'~130g/quả – USDA 09200',fixed:1},
+  {id:'quyt',name:'Quýt',cat:'trai-cay',unit:'quả',kcal:37,note:'~76g/quả – USDA 09218',fixed:1},
+  {id:'xoai',name:'Xoài',cat:'trai-cay',unit:'g',kcal:60,note:'per 100g – USDA 09176'},
+  {id:'dua-hau',name:'Dưa hấu',cat:'trai-cay',unit:'g',kcal:30,note:'per 100g – USDA 09326'},
+  {id:'dua-luoi',name:'Dưa lưới',cat:'trai-cay',unit:'g',kcal:34,note:'per 100g – cantaloupe'},
+  {id:'nho',name:'Nho (chùm)',cat:'trai-cay',unit:'g',kcal:67,note:'per 100g – USDA 09132'},
+  {id:'dau-tay',name:'Dâu tây',cat:'trai-cay',unit:'g',kcal:32,note:'per 100g – USDA 09316'},
+  {id:'kiwi',name:'Kiwi',cat:'trai-cay',unit:'quả',kcal:42,note:'~69g/quả – USDA 09148',fixed:1},
+  {id:'bo-avocado',name:'Bơ (avocado)',cat:'trai-cay',unit:'g',kcal:160,note:'per 100g – USDA 09037'},
+  {id:'thanh-long',name:'Thanh long trắng',cat:'trai-cay',unit:'g',kcal:60,note:'per 100g'},
+  {id:'oi',name:'Ổi',cat:'trai-cay',unit:'g',kcal:68,note:'per 100g – USDA 09139'},
+  {id:'le',name:'Lê',cat:'trai-cay',unit:'quả',kcal:101,note:'~178g/quả – USDA 09252',fixed:1},
+  {id:'man',name:'Mận',cat:'trai-cay',unit:'quả',kcal:30,note:'~66g/quả – USDA 09279',fixed:1},
+  {id:'chom-chom',name:'Chôm chôm',cat:'trai-cay',unit:'quả',kcal:9,note:'~9g/quả thịt',fixed:1},
+  {id:'vai',name:'Vải',cat:'trai-cay',unit:'quả',kcal:7,note:'~10g/quả thịt',fixed:1},
+  {id:'sau-rieng',name:'Sầu riêng',cat:'trai-cay',unit:'g',kcal:147,note:'per 100g – USDA 09094'},
+  {id:'mit',name:'Mít (thịt)',cat:'trai-cay',unit:'g',kcal:95,note:'per 100g – USDA 09143'},
+  {id:'dua-com',name:'Dừa (cơm trắng)',cat:'trai-cay',unit:'g',kcal:354,note:'per 100g – USDA 12104'},
+  {id:'nuoc-dua',name:'Nước dừa tươi',cat:'trai-cay',unit:'ml',kcal:19,note:'per 100ml – USDA 12117'},
+  {id:'nhan',name:'Nhãn',cat:'trai-cay',unit:'quả',kcal:7,note:'~8g/quả thịt',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🥛 SỮA & SẢN PHẨM TỪ SỮA
+  // ══════════════════════════════════════════════════════
+  {id:'sua-tuoi-kd',name:'Sữa tươi không đường',cat:'sua',unit:'ml',kcal:61,note:'per 100ml – Vinamilk'},
+  {id:'sua-tuoi-cd',name:'Sữa tươi có đường',cat:'sua',unit:'ml',kcal:68,note:'per 100ml'},
+  {id:'sua-hat',name:'Sữa hạt (mixed nut)',cat:'sua',unit:'ml',kcal:50,note:'per 100ml – ước tính'},
+  {id:'sua-dau-nanh',name:'Sữa đậu nành',cat:'sua',unit:'ml',kcal:54,note:'per 100ml – USDA'},
+  {id:'sua-yen-mach',name:'Sữa yến mạch',cat:'sua',unit:'ml',kcal:47,note:'per 100ml – Oatly'},
+  {id:'sua-hanh-nhan',name:'Sữa hạnh nhân (unsweetened)',cat:'sua',unit:'ml',kcal:17,note:'per 100ml – Almond Breeze'},
+  {id:'scc-khong-duong',name:'Sữa chua không đường',cat:'sua',unit:'hũ',kcal:60,note:'~100g/hũ',fixed:1},
+  {id:'scc-it-duong',name:'Sữa chua ít đường',cat:'sua',unit:'hũ',kcal:80,note:'~100g/hũ',fixed:1},
+  {id:'greek-yogurt',name:'Greek yogurt (plain)',cat:'sua',unit:'g',kcal:59,note:'per 100g – USDA 01256'},
+  {id:'yogurt-uong',name:'Yogurt uống',cat:'sua',unit:'chai',kcal:140,note:'~200ml/chai – Vinamilk',fixed:1},
+  {id:'cheese-lat',name:'Phô mai lát (processed)',cat:'sua',unit:'lát',kcal:70,note:'~20g/lát',fixed:1},
+  {id:'mozzarella',name:'Mozzarella',cat:'sua',unit:'g',kcal:280,note:'per 100g – USDA 01026'},
+  {id:'parmesan',name:'Parmesan (bào)',cat:'sua',unit:'g',kcal:431,note:'per 100g – USDA 01032'},
+  {id:'cream-cheese',name:'Cream cheese',cat:'sua',unit:'g',kcal:342,note:'per 100g – USDA 01017'},
+  {id:'bo-lat',name:'Bơ lạt (butter)',cat:'sua',unit:'g',kcal:717,note:'per 100g – USDA 01001'},
+
+  // ══════════════════════════════════════════════════════
+  // 💪 WHEY & SUPPLEMENT
+  // ══════════════════════════════════════════════════════
+  {id:'whey-isolate',name:'Whey Isolate (1 scoop)',cat:'supplement',unit:'scoop',kcal:110,note:'~30g – ~25g protein',fixed:1},
+  {id:'whey-concentrate',name:'Whey Concentrate (1 scoop)',cat:'supplement',unit:'scoop',kcal:130,note:'~33g – ~24g protein',fixed:1},
+  {id:'hydro-whey',name:'Hydrolyzed Whey (1 scoop)',cat:'supplement',unit:'scoop',kcal:130,note:'~30g – tiêu hóa nhanh',fixed:1},
+  {id:'mass-gainer',name:'Mass Gainer (1 scoop)',cat:'supplement',unit:'scoop',kcal:388,note:'~100g – Serious Mass',fixed:1},
+  {id:'casein-protein',name:'Casein protein (1 scoop)',cat:'supplement',unit:'scoop',kcal:120,note:'~34g – ON Gold Standard',fixed:1},
+  {id:'vegan-protein',name:'Vegan protein (1 scoop)',cat:'supplement',unit:'scoop',kcal:120,note:'~30g – pea/rice blend',fixed:1},
+  // Brands
+  {id:'on-gold-isolate',name:'ON Gold Standard Isolate (1 scoop)',cat:'supplement',unit:'scoop',kcal:110,note:'~30.4g – 25g protein',fixed:1},
+  {id:'r1-protein',name:'Rule 1 R1 Protein (1 scoop)',cat:'supplement',unit:'scoop',kcal:110,note:'~29g – 25g protein',fixed:1},
+  {id:'myprotein-impact',name:'MyProtein Impact Whey (1 scoop)',cat:'supplement',unit:'scoop',kcal:103,note:'~25g – ~20g protein',fixed:1},
+  {id:'dymatize-iso100',name:'Dymatize ISO100 (1 scoop)',cat:'supplement',unit:'scoop',kcal:110,note:'~30g – 25g protein',fixed:1},
+  {id:'applied-nutrition',name:'Applied Nutrition WPC80 (1 scoop)',cat:'supplement',unit:'scoop',kcal:105,note:'~25g',fixed:1},
+  {id:'mutant-whey',name:'Mutant Whey (1 scoop)',cat:'supplement',unit:'scoop',kcal:150,note:'~42g – 26g protein',fixed:1},
+  {id:'muscletech-nitrotech',name:'MuscleTech NitroTech (1 scoop)',cat:'supplement',unit:'scoop',kcal:160,note:'~46g – 30g protein',fixed:1},
+  // Supplement khác
+  {id:'creatine',name:'Creatine (5g)',cat:'supplement',unit:'muỗng',kcal:0,note:'~5g – 0 kcal',fixed:1},
+  {id:'bcaa',name:'BCAA (1 scoop)',cat:'supplement',unit:'scoop',kcal:20,note:'~7g – 4kcal/g protein',fixed:1},
+  {id:'eaa',name:'EAA (1 scoop)',cat:'supplement',unit:'scoop',kcal:40,note:'~10g',fixed:1},
+  {id:'pre-workout',name:'Pre-workout (1 scoop)',cat:'supplement',unit:'scoop',kcal:15,note:'~10g – mostly stimulants',fixed:1},
+  {id:'fish-oil',name:'Fish oil (1 viên)',cat:'supplement',unit:'viên',kcal:9,note:'~1g omega-3',fixed:1},
+  {id:'multivitamin',name:'Multivitamin (1 viên)',cat:'supplement',unit:'viên',kcal:5,note:'micro-nutrients',fixed:1},
+  {id:'electrolyte',name:'Electrolyte (1 gói)',cat:'supplement',unit:'gói',kcal:20,note:'~6g sugar',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🏪 ĐỒ ĂN NHANH / FAST FOOD
+  // ══════════════════════════════════════════════════════
+  {id:'ga-ran-kfc',name:'Gà rán KFC (1 miếng đùi)',cat:'fastfood',unit:'miếng',kcal:320,note:'~115g – KFC nutrition',fixed:1},
+  {id:'ga-ran-bong',name:'Gà rán ức (Original)',cat:'fastfood',unit:'miếng',kcal:360,note:'~155g – KFC breast',fixed:1},
+  {id:'hamburger-cheese',name:'Hamburger phô mai',cat:'fastfood',unit:'cái',kcal:440,note:'~110g – McDouble',fixed:1},
+  {id:'pizza-pepperoni',name:'Pizza pepperoni (1 miếng)',cat:'fastfood',unit:'miếng',kcal:298,note:'~107g – Pizza Hut',fixed:1},
+  {id:'khoai-nho',name:'Khoai tây chiên nhỏ (S)',cat:'fastfood',unit:'phần',kcal:230,note:'~71g – McDonald\'s',fixed:1},
+  {id:'khoai-vua',name:'Khoai tây chiên vừa (M)',cat:'fastfood',unit:'phần',kcal:320,note:'~102g – McDonald\'s',fixed:1},
+  {id:'khoai-lon',name:'Khoai tây chiên lớn (L)',cat:'fastfood',unit:'phần',kcal:490,note:'~154g – McDonald\'s',fixed:1},
+  {id:'hotdog',name:'Hotdog (không sốt)',cat:'fastfood',unit:'cái',kcal:280,note:'~99g',fixed:1},
+  {id:'mcnuggets-6',name:'Chicken McNuggets 6 miếng',cat:'fastfood',unit:'phần',kcal:280,note:'~96g – McDonald\'s',fixed:1},
+  {id:'bigmac',name:'Big Mac',cat:'fastfood',unit:'cái',kcal:550,note:'~214g – McDonald\'s',fixed:1},
+  {id:'whopper',name:'Burger King Whopper',cat:'fastfood',unit:'cái',kcal:660,note:'~291g',fixed:1},
+  {id:'jollibee-chicken',name:'Jollibee Chickenjoy (1 miếng)',cat:'fastfood',unit:'miếng',kcal:310,note:'~115g',fixed:1},
+  {id:'lotteria-burger',name:'Lotteria Tôm burger',cat:'fastfood',unit:'cái',kcal:430,note:'~150g',fixed:1},
+  {id:'banh-taco',name:'Taco Bell Soft Taco',cat:'fastfood',unit:'cái',kcal:210,note:'~99g – Taco Bell',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🍺 ĐỒ UỐNG
+  // ══════════════════════════════════════════════════════
+  {id:'nuoc-loc',name:'Nước lọc',cat:'uong',unit:'ml',kcal:0,note:'0 kcal'},
+  {id:'nuoc-khoang',name:'Nước khoáng',cat:'uong',unit:'ml',kcal:0,note:'0 kcal'},
+  {id:'soda-0',name:'Soda / Tonic nước',cat:'uong',unit:'ml',kcal:0,note:'0 kcal – plain'},
+  {id:'coca-cola',name:'Coca-Cola (lon 330ml)',cat:'uong',unit:'lon',kcal:140,note:'330ml – 35g sugar',fixed:1},
+  {id:'pepsi',name:'Pepsi (lon 330ml)',cat:'uong',unit:'lon',kcal:150,note:'330ml',fixed:1},
+  {id:'sprite',name:'Sprite (lon 330ml)',cat:'uong',unit:'lon',kcal:140,note:'330ml',fixed:1},
+  {id:'redbull',name:'Red Bull (lon 250ml)',cat:'uong',unit:'lon',kcal:113,note:'250ml – 27g sugar',fixed:1},
+  {id:'cafe-den',name:'Cà phê đen (không đường)',cat:'uong',unit:'ly',kcal:5,note:'~240ml – USDA',fixed:1},
+  {id:'cafe-sua',name:'Cà phê sữa đá',cat:'uong',unit:'ly',kcal:150,note:'~300ml – condensed milk 20ml',fixed:1},
+  {id:'latte',name:'Latte (sữa không đường)',cat:'uong',unit:'ly',kcal:120,note:'~355ml – Starbucks grande',fixed:1},
+  {id:'cappuccino',name:'Cappuccino',cat:'uong',unit:'ly',kcal:80,note:'~177ml – dry cap',fixed:1},
+  {id:'americano',name:'Americano',cat:'uong',unit:'ly',kcal:10,note:'~240ml – double shot',fixed:1},
+  {id:'bac-xiu',name:'Bạc xỉu',cat:'uong',unit:'ly',kcal:130,note:'~300ml – ít cà phê, nhiều sữa',fixed:1},
+  {id:'tra-xanh-khong',name:'Trà xanh (không đường)',cat:'uong',unit:'ly',kcal:2,note:'~240ml – USDA',fixed:1},
+  {id:'tra-sua-ban',name:'Trà sữa bán ngoài',cat:'uong',unit:'ly',kcal:320,note:'~500ml – có trân châu',fixed:1},
+  {id:'matcha-latte',name:'Matcha latte',cat:'uong',unit:'ly',kcal:240,note:'~355ml – Starbucks',fixed:1},
+  {id:'hong-tra',name:'Hồng trà (không đường)',cat:'uong',unit:'ly',kcal:2,note:'~240ml',fixed:1},
+  {id:'oolong',name:'Oolong (không đường)',cat:'uong',unit:'ml',kcal:1,note:'per 100ml'},
+  {id:'nuoc-cam',name:'Nước cam tươi',cat:'uong',unit:'ml',kcal:45,note:'per 100ml – USDA 09206'},
+  {id:'nuoc-ep-tao',name:'Nước ép táo',cat:'uong',unit:'ml',kcal:46,note:'per 100ml – USDA 09016'},
+  {id:'sinh-to-chuoi',name:'Sinh tố chuối (sữa tươi)',cat:'uong',unit:'ly',kcal:240,note:'~300ml – 1 chuối + 150ml sữa',fixed:1},
+  {id:'sinh-to-bo',name:'Sinh tố bơ (sữa đặc)',cat:'uong',unit:'ly',kcal:380,note:'~300ml – 100g bơ + sữa đặc',fixed:1},
+  {id:'bia-330',name:'Bia (lon 330ml)',cat:'uong',unit:'lon',kcal:143,note:'330ml – USDA 14003',fixed:1},
   {id:'bia-500',name:'Bia (chai 500ml)',cat:'uong',unit:'chai',kcal:215,note:'500ml',fixed:1},
-  {id:'coca',name:'Nước ngọt có ga (lon)',cat:'uong',unit:'lon',kcal:140,note:'330ml',fixed:1},
-  {id:'nuoc-ep',name:'Nước ép trái cây',cat:'uong',unit:'ml',kcal:45,note:'per 100ml'},
-  {id:'sua-tuoi',name:'Sữa tươi',cat:'uong',unit:'ml',kcal:61,note:'per 100ml'},
-  {id:'ca-phe-sua',name:'Cà phê sữa đá',cat:'uong',unit:'ly',kcal:150,note:'~300ml',fixed:1},
-  {id:'tra-sua',name:'Trà sữa',cat:'uong',unit:'ly',kcal:320,note:'~500ml',fixed:1},
+  {id:'ruou-vang-do',name:'Rượu vang đỏ',cat:'uong',unit:'ly',kcal:125,note:'~148ml/ly – USDA',fixed:1},
+  {id:'ruou-vang-trang',name:'Rượu vang trắng',cat:'uong',unit:'ly',kcal:121,note:'~148ml/ly',fixed:1},
+  {id:'vodka',name:'Vodka (1 shot)',cat:'uong',unit:'shot',kcal:97,note:'~44ml – 40% ABV',fixed:1},
+  {id:'whisky',name:'Whisky (1 shot)',cat:'uong',unit:'shot',kcal:105,note:'~44ml – 40% ABV',fixed:1},
 
-  {id:'pho-bo',name:'Bát phở bò',cat:'mon',unit:'bát',kcal:420,note:'~500g',fixed:1},
-  {id:'bun-bo',name:'Bát bún bò',cat:'mon',unit:'bát',kcal:380,note:'~400g',fixed:1},
-  {id:'bun-cha',name:'Bún chả',cat:'mon',unit:'suất',kcal:450,note:'1 suất',fixed:1},
-  {id:'com-tam',name:'Cơm tấm sườn',cat:'mon',unit:'đĩa',kcal:650,note:'1 đĩa',fixed:1},
-  {id:'banh-mi-op',name:'Bánh mì ốp la',cat:'mon',unit:'ổ',kcal:350,note:'1 ổ',fixed:1},
+  // ══════════════════════════════════════════════════════
+  // 🌰 HẠT & CHẤT BÉO TỐT
+  // ══════════════════════════════════════════════════════
+  {id:'hanh-nhan',name:'Hạnh nhân (raw)',cat:'hat-dau',unit:'g',kcal:579,note:'per 100g – USDA 12061'},
+  {id:'oc-cho',name:'Óc chó (walnuts)',cat:'hat-dau',unit:'g',kcal:654,note:'per 100g – USDA 12155'},
+  {id:'hat-dieu',name:'Hạt điều (raw)',cat:'hat-dau',unit:'g',kcal:553,note:'per 100g – USDA 12087'},
+  {id:'macca',name:'Hạt macca',cat:'hat-dau',unit:'g',kcal:718,note:'per 100g – USDA 12131'},
+  {id:'hat-chia',name:'Hạt chia',cat:'hat-dau',unit:'g',kcal:486,note:'per 100g – USDA 12006'},
+  {id:'hat-lanh',name:'Hạt lanh (flaxseed)',cat:'hat-dau',unit:'g',kcal:534,note:'per 100g – USDA 12220'},
+  {id:'dau-phong',name:'Đậu phộng rang',cat:'hat-dau',unit:'g',kcal:567,note:'per 100g – USDA 16087'},
+  {id:'bo-dau-phong',name:'Bơ đậu phộng',cat:'hat-dau',unit:'g',kcal:588,note:'per 100g – USDA 01037'},
+  {id:'dau-olive',name:'Dầu olive (1 muỗng canh)',cat:'hat-dau',unit:'muỗng',kcal:119,note:'~14ml – USDA 04053',fixed:1},
+  {id:'dau-dua',name:'Dầu dừa (1 muỗng canh)',cat:'hat-dau',unit:'muỗng',kcal:117,note:'~14ml – USDA 04047',fixed:1},
+  {id:'dau-an',name:'Dầu ăn thông thường',cat:'hat-dau',unit:'muỗng',kcal:120,note:'~14ml – canola/soy',fixed:1},
+  {id:'hat-bi-do',name:'Hạt bí đỏ (pepitas)',cat:'hat-dau',unit:'g',kcal:559,note:'per 100g – USDA 12016'},
+  {id:'hat-huong-duong',name:'Hạt hướng dương rang',cat:'hat-dau',unit:'g',kcal:584,note:'per 100g – USDA 12037'},
 
-  {id:'dau-an',name:'Dầu ăn',cat:'khac',unit:'muỗng canh',kcal:120,note:'~14ml',fixed:1},
-  {id:'duong',name:'Đường',cat:'khac',unit:'g',kcal:387,note:'per 100g'},
+  // ══════════════════════════════════════════════════════
+  // 🍜 MÓN ĂN VIỆT NAM & ĐỒ CHÍN
+  // ══════════════════════════════════════════════════════
+  {id:'pho-bo-bat',name:'Phở bò (1 bát thường)',cat:'mon',unit:'bát',kcal:420,note:'~500g – thịt bò, bánh phở, nước dùng',fixed:1},
+  {id:'bun-cha-suat',name:'Bún chả Hà Nội (1 suất)',cat:'mon',unit:'suất',kcal:450,note:'bún + chả + nước chấm',fixed:1},
+  {id:'bun-bo-hue',name:'Bún bò Huế (1 bát)',cat:'mon',unit:'bát',kcal:380,note:'~400g',fixed:1},
+  {id:'com-tam',name:'Cơm tấm sườn nướng',cat:'mon',unit:'đĩa',kcal:650,note:'1 đĩa – sườn + cơm + đồ ăn kèm',fixed:1},
+  {id:'banh-mi-pate',name:'Bánh mì pate (đầy đủ)',cat:'mon',unit:'ổ',kcal:380,note:'~150g – pate + chả + rau',fixed:1},
+  {id:'goi-cuon',name:'Gỏi cuốn tôm thịt',cat:'mon',unit:'cuốn',kcal:90,note:'~80g/cuốn',fixed:1},
+  {id:'nem-ran',name:'Nem rán (chả giò)',cat:'mon',unit:'cái',kcal:100,note:'~50g/cái chiên',fixed:1},
+  {id:'cha-ca',name:'Chả cá Hà Nội (1 suất)',cat:'mon',unit:'suất',kcal:480,note:'bún + chả cá + rau',fixed:1},
+  {id:'banh-cuon',name:'Bánh cuốn (1 suất)',cat:'mon',unit:'suất',kcal:300,note:'~200g – nhân thịt, nấm',fixed:1},
+  {id:'bun-dau',name:'Bún đậu mắm tôm (1 suất)',cat:'mon',unit:'suất',kcal:500,note:'bún + đậu rán + chả cốm',fixed:1},
+  {id:'com-rang-dua-bo',name:'Cơm rang dưa bò',cat:'mon',unit:'đĩa',kcal:420,note:'1 đĩa ~300g',fixed:1},
+  {id:'com-rang-cai-bo',name:'Cơm rang cải bò',cat:'mon',unit:'đĩa',kcal:400,note:'1 đĩa ~300g',fixed:1},
+  {id:'com-rang-dui-ga',name:'Cơm rang đùi gà',cat:'mon',unit:'đĩa',kcal:460,note:'1 đĩa ~300g',fixed:1},
+  {id:'com-rang-thap-cam',name:'Cơm rang thập cẩm',cat:'mon',unit:'đĩa',kcal:450,note:'1 đĩa ~300g – tôm, thịt, cà rốt, ngô',fixed:1},
+  {id:'hu-tieu-bat',name:'Hủ tiếu Nam Vang (1 tô)',cat:'mon',unit:'tô',kcal:400,note:'~400g',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 📦 THỰC PHẨM ĐÓNG GÓI
+  // ══════════════════════════════════════════════════════
+  // Snack
+  {id:'snack-oishi',name:'Snack Oishi (1 gói nhỏ)',cat:'dong-goi',unit:'gói',kcal:110,note:'~24g – label',fixed:1},
+  {id:'snack-poca',name:'Snack Poca khoai tây (1 gói)',cat:'dong-goi',unit:'gói',kcal:150,note:'~30g – label',fixed:1},
+  {id:'keo-socoloa',name:'Socola thanh (1 thanh)',cat:'dong-goi',unit:'thanh',kcal:210,note:'~40g – dark 70%',fixed:1},
+  {id:'keo-bim',name:'Bánh bim bim (1 gói)',cat:'dong-goi',unit:'gói',kcal:130,note:'~28g',fixed:1},
+  {id:'banh-oreo',name:'Bánh Oreo (3 cái)',cat:'dong-goi',unit:'phần',kcal:160,note:'~42g – 3 cookies',fixed:1},
+  {id:'banh-kem-milo',name:'Bánh kem Milo (1 hộp)',cat:'dong-goi',unit:'hộp',kcal:290,note:'~80g – Kinh Đô',fixed:1},
+  // Nước ngọt đóng gói
+  {id:'nuoc-ngot-vinacafe',name:'Nước tăng lực Sting (lon)',cat:'dong-goi',unit:'lon',kcal:112,note:'330ml – Pepsi Vietnam',fixed:1},
+  {id:'nuoc-ngot-revive',name:'Revive điện giải (chai)',cat:'dong-goi',unit:'chai',kcal:100,note:'500ml – 25g carb',fixed:1},
+  {id:'nuoc-trai-cay-typ',name:'Nước ép trái cây TH True Juice',cat:'dong-goi',unit:'hộp',kcal:120,note:'200ml – orange juice',fixed:1},
+  // Bột đậu
+  {id:'bot-dau-nanh',name:'Bột đậu nành (pha sẵn)',cat:'dong-goi',unit:'ml',kcal:56,note:'per 100ml – pha đúng tỉ lệ'},
+  {id:'bot-san',name:'Bột sắn dây',cat:'dong-goi',unit:'g',kcal:346,note:'per 100g – bột khô'},
+  {id:'bot-ngu-coc',name:'Bột ngũ cốc (1 ly pha)',cat:'dong-goi',unit:'ly',kcal:160,note:'~35g bột + 200ml nước',fixed:1},
+  // Sữa đóng gói
+  {id:'sua-vinamilk-box',name:'Sữa Vinamilk (hộp 180ml)',cat:'dong-goi',unit:'hộp',kcal:120,note:'180ml – full cream',fixed:1},
+  {id:'sua-th-200',name:'Sữa TH True Milk (hộp 200ml)',cat:'dong-goi',unit:'hộp',kcal:130,note:'200ml – fresh milk',fixed:1},
+  {id:'milo-goi',name:'Milo (1 gói bột pha)',cat:'dong-goi',unit:'gói',kcal:130,note:'~21g bột + 180ml sữa',fixed:1},
+  {id:'ovaltine-goi',name:'Ovaltine (1 gói pha)',cat:'dong-goi',unit:'gói',kcal:110,note:'~23g',fixed:1},
+
+  // ══════════════════════════════════════════════════════
+  // 🫘 ĐẬU & LEGUMES
+  // ══════════════════════════════════════════════════════
+  {id:'dau-hu-chac',name:'Đậu hũ chắc (firm tofu)',cat:'hat-dau',unit:'g',kcal:76,note:'per 100g – USDA 16126'},
+  {id:'dau-hu-non',name:'Đậu hũ non (soft tofu)',cat:'hat-dau',unit:'g',kcal:55,note:'per 100g – USDA 16127'},
+  {id:'dau-do',name:'Đậu đỏ nấu chín',cat:'hat-dau',unit:'g',kcal:127,note:'per 100g – kidney beans'},
+  {id:'dau-den',name:'Đậu đen nấu chín',cat:'hat-dau',unit:'g',kcal:132,note:'per 100g – black beans USDA'},
+  {id:'dau-xanh',name:'Đậu xanh nấu chín',cat:'hat-dau',unit:'g',kcal:105,note:'per 100g – mung beans'},
+  {id:'dau-cove',name:'Đậu cô ve (sống)',cat:'rau',unit:'g',kcal:31,note:'per 100g – green beans USDA'},
+  {id:'edamame',name:'Edamame (luộc)',cat:'hat-dau',unit:'g',kcal:121,note:'per 100g – USDA 11212'},
+
+  // ══════════════════════════════════════════════════════
+  // 🍯 GIA VỊ & ĐIỀU VỊ
+  // ══════════════════════════════════════════════════════
+  {id:'duong',name:'Đường trắng',cat:'khac',unit:'g',kcal:387,note:'per 100g – USDA 19335'},
+  {id:'mat-ong',name:'Mật ong (1 muỗng canh)',cat:'khac',unit:'muỗng',kcal:64,note:'~21g – USDA 19296',fixed:1},
+  {id:'tuong-ca',name:'Tương cà (ketchup, 1 muỗng)',cat:'khac',unit:'muỗng',kcal:19,note:'~17g – USDA 11935',fixed:1},
+  {id:'mayonnaise',name:'Mayonnaise (1 muỗng canh)',cat:'khac',unit:'muỗng',kcal:94,note:'~15g – USDA 04025',fixed:1},
+  {id:'nuoc-tuong',name:'Nước tương (1 muỗng)',cat:'khac',unit:'muỗng',kcal:8,note:'~18ml – soy sauce',fixed:1},
+  {id:'nuoc-mam',name:'Nước mắm (1 muỗng)',cat:'khac',unit:'muỗng',kcal:6,note:'~18ml – fish sauce',fixed:1},
+  {id:'yen-mach',name:'Yến mạch (oats)',cat:'tinh-bot',unit:'g',kcal:389,note:'per 100g khô – USDA 08120'},
+  {id:'yen-mach-nau',name:'Cháo yến mạch nấu chín',cat:'tinh-bot',unit:'g',kcal:71,note:'per 100g – cooked oatmeal'},
 ];
 
+
 const FOOD_CATS = [
-  {id:'all',label:'Tất cả'},
-  {id:'tinh-bot',label:'🍚 Tinh bột'},
-  {id:'trung',label:'🥚 Trứng'},
+  {id:'all',label:'🔍 Tất cả'},
   {id:'ga',label:'🍗 Gà'},
-  {id:'lon',label:'🥩 Lợn'},
-  {id:'bo',label:'🥩 Bò'},
+  {id:'bo',label:'🐄 Bò'},
+  {id:'lon',label:'🐷 Heo'},
   {id:'vit',label:'🦆 Vịt'},
   {id:'hai-san',label:'🐟 Hải sản'},
-  {id:'uong',label:'🍺 Đồ uống'},
-  {id:'mon',label:'🍜 Món ăn'},
-  {id:'khac',label:'🧂 Khác'},
+  {id:'trung',label:'🥚 Trứng'},
+  {id:'tinh-bot',label:'🍚 Tinh bột'},
+  {id:'rau',label:'🥦 Rau củ'},
+  {id:'trai-cay',label:'🍌 Trái cây'},
+  {id:'sua',label:'🥛 Sữa & Phô mai'},
+  {id:'supplement',label:'💪 Whey & Suppl.'},
+  {id:'fastfood',label:'🍔 Đồ ăn nhanh'},
+  {id:'uong',label:'🍵 Đồ uống'},
+  {id:'hat-dau',label:'🌰 Hạt & Chất béo'},
+  {id:'mon',label:'🍜 Món Việt'},
+  {id:'dong-goi',label:'📦 Đóng gói'},
+  {id:'khac',label:'🧂 Gia vị'},
 ];
 
 // ─── EXERCISE LIBRARY (MET-based) ───────────────────────
@@ -476,15 +796,31 @@ function buildFoodCats(){
 }
 function setFoodCat(id){ foodCat=id; buildFoodCats(); filterFoods(); }
 
+// Diacritic normalization for accent-insensitive search
+function stripAccents(s){
+  return s.normalize('NFD').replace(/[̀-ͯ]/gu,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+}
+
 function filterFoods(){
-  const q = (document.getElementById('food-search').value||'').toLowerCase();
+  const raw = (document.getElementById('food-search').value||'');
+  const q = stripAccents(raw);
   let list = foodCat==='all' ? FOODS : FOODS.filter(f=>f.cat===foodCat);
-  if(q) list = list.filter(f=>f.name.toLowerCase().includes(q));
-  document.getElementById('food-grid').innerHTML = list.map(f =>
+  if(q) list = list.filter(f=>
+    stripAccents(f.name).includes(q) ||
+    stripAccents(f.note||'').includes(q) ||
+    (f.id||'').includes(q)
+  );
+  // limit display to 60 items for perf
+  const display = list.slice(0,60);
+  document.getElementById('food-grid').innerHTML = display.map(f =>
     `<div class="fbtn${selFood&&selFood.id===f.id?' sel':''}" onclick="selectFood('${f.id}')">
       <span class="fn">${f.name}</span><span class="fm">${f.note}</span>
     </div>`
   ).join('') || '<div style="font-size:13px;color:var(--text2);padding:8px;grid-column:span 2">Không tìm thấy</div>';
+  // show count hint
+  if(list.length>60){
+    document.getElementById('food-grid').innerHTML += `<div style="font-size:11px;color:var(--text3);padding:6px 8px;grid-column:span 2">...còn ${list.length-60} kết quả, hãy tìm kiếm cụ thể hơn</div>`;
+  }
 }
 
 function selectFood(id){
@@ -675,9 +1011,9 @@ function getIntensityColor(met){
 }
 
 function filterExercises(){
-  const q = (document.getElementById('ex-search').value||'').toLowerCase();
+  const q = stripAccents(document.getElementById('ex-search').value||'');
   let list = exCat==='all' ? EXERCISES : EXERCISES.filter(e=>e.cat===exCat);
-  if(q) list = list.filter(e=>e.name.toLowerCase().includes(q)||e.note.toLowerCase().includes(q));
+  if(q) list = list.filter(e=>stripAccents(e.name).includes(q)||stripAccents(e.note||'').includes(q));
   const w = getWeight();
   document.getElementById('ex-grid').innerHTML = list.map(e => {
     const kpm = (e.met * w / 60).toFixed(1);   // kcal per minute
