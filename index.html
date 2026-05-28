@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Calo Tracker">
+<meta name="theme-color" content="#3B6D11">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Calo Tracker</title>
 <style>
 :root {
@@ -154,6 +156,16 @@ hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
 .mylib-ex-card.sel-out{border-color:var(--red-bd);background:var(--red-bg)}
 .mylib-ex-del{position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;font-size:14px;color:var(--text3);cursor:pointer;padding:2px 4px}
 .mylib-ex-del:hover{color:var(--red)}
+
+/* Backup bar */
+.backup-bar{display:flex;gap:6px;padding:8px 16px;background:var(--card);border-bottom:.5px solid var(--bd)}
+.bbtn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px 8px;font-size:13px;font-weight:600;border-radius:var(--rs);cursor:pointer;border:.5px solid var(--bd);background:var(--bg);color:var(--text2)}
+.bbtn:active{opacity:.7}
+.bbtn.export{border-color:var(--blue-bd);background:var(--blue-bg);color:var(--blue)}
+.bbtn.import{border-color:var(--amber-bd);background:var(--amber-bg);color:var(--amber)}
+/* Toast */
+#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:#222;color:#fff;font-size:13px;padding:9px 18px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
@@ -178,6 +190,14 @@ hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
 <div class="goal-bar">
   🎯 Mục tiêu: <input type="number" id="goalInput" value="2000" step="50" inputmode="numeric" oninput="saveGoal();render()"> kcal / ngày
 </div>
+
+<div class="backup-bar">
+  <button class="bbtn export" onclick="exportBackup()">📤 Xuất backup</button>
+  <button class="bbtn import" onclick="document.getElementById('importFile').click()">📥 Nhập backup</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+</div>
+
+<div id="toast"></div>
 
 <div class="summary" id="summary"></div>
 <div class="prog" id="prog"></div>
@@ -801,6 +821,216 @@ document.getElementById('food-qty').addEventListener('keydown',e=>{if(e.key==='E
 document.getElementById('ex-min').addEventListener('keydown',e=>{if(e.key==='Enter')addFromExLib();});
 document.getElementById('food-custom-kcal').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomFood();});
 document.getElementById('ex-custom-kcal').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomExercise();});
+
+// ─── BACKUP: EXPORT / IMPORT ──────────────────────────────
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function exportBackup(){
+  const backup = {
+    version: 2,
+    exported: new Date().toISOString(),
+    data:      localStorage.getItem('calo_v3')      || '{}',
+    goal:      localStorage.getItem('calo_goal_v3') || '2000',
+    weight:    localStorage.getItem('calo_weight_v3')|| '65',
+    myfoods:   localStorage.getItem('calo_myfoods') || '[]',
+    myex:      localStorage.getItem('calo_myex')    || '[]',
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const date = new Date().toISOString().slice(0,10);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `calo-backup-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('✅ Đã xuất backup thành công!');
+}
+
+function importBackup(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try {
+      const backup = JSON.parse(ev.target.result);
+      if(!backup.version || !backup.data) throw new Error('File không hợp lệ');
+      if(!confirm(`Nhập backup ngày ${(backup.exported||'').slice(0,10)}?\nDữ liệu hiện tại sẽ bị ghi đè.`)) return;
+      localStorage.setItem('calo_v3',       backup.data);
+      localStorage.setItem('calo_goal_v3',  backup.goal   || '2000');
+      localStorage.setItem('calo_weight_v3',backup.weight || '65');
+      localStorage.setItem('calo_myfoods',  backup.myfoods|| '[]');
+      localStorage.setItem('calo_myex',     backup.myex   || '[]');
+      render();
+      renderMyFoodLib();
+      renderMyExLib();
+      showToast('✅ Nhập backup thành công!');
+    } catch(err){
+      showToast('❌ File không hợp lệ, thử lại!');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── PWA: SERVICE WORKER (inline via Blob) ────────────────
+(function(){
+  const SW_VERSION = 'calo-v1';
+  const swCode = `
+const CACHE = '${SW_VERSION}';
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll([self.location.href]))
+  );
+  self.skipWaiting();
+});
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+      const clone = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, clone));
+      return res;
+    }).catch(() => caches.match(e.request)))
+  );
+});
+  `;
+  if('serviceWorker' in navigator){
+    const blob = new Blob([swCode], {type:'application/javascript'});
+    const url  = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(url, {scope:'./'})
+      .then(()=>{ URL.revokeObjectURL(url); })
+      .catch(()=>{});
+  }
+
+  // ─── Apple touch icon — anime runner (generated via canvas) ─
+  try {
+    const c = document.createElement('canvas');
+    c.width = c.height = 512;
+    const ctx = c.getContext('2d');
+    const S = 512;
+
+    // rounded square background — deep orange
+    function roundRect(x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y);
+      ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+      ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+      ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+      ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+      ctx.closePath();
+    }
+    roundRect(0,0,S,S,112);
+    ctx.fillStyle='#D45500'; ctx.fill();
+
+    // inner circle accent
+    ctx.beginPath(); ctx.arc(256,230,170,0,Math.PI*2);
+    ctx.strokeStyle='#FF8C00'; ctx.lineWidth=16; ctx.globalAlpha=0.35; ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // swirl / chakra lines
+    ctx.strokeStyle='#FFB347'; ctx.lineWidth=8; ctx.lineCap='round'; ctx.globalAlpha=0.7;
+    ctx.beginPath();
+    ctx.moveTo(206,120); ctx.bezierCurveTo(310,95,320,160,280,185);
+    ctx.bezierCurveTo(240,210,170,200,178,160);
+    ctx.bezierCurveTo(186,120,260,100,300,115);
+    ctx.stroke(); ctx.globalAlpha=1;
+
+    // speed lines (left side)
+    ctx.strokeStyle='#FFB347'; ctx.lineCap='round';
+    [[60,200,130,200,6,0.7],[48,225,118,225,5,0.5],[60,250,125,250,4,0.4]].forEach(([x1,y1,x2,y2,lw,a])=>{
+      ctx.globalAlpha=a; ctx.lineWidth=lw;
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+
+    // ── figure: center at (280, 200) ──
+    const cx=280, cy=200;
+
+    // hair spikes (orange)
+    ctx.fillStyle='#FF5500';
+    [[cx-42,cy-95,cx-62,cy-145,cx-24,cy-90],
+     [cx-18,cy-102,cx-28,cy-155,cx+10,cy-98],
+     [cx+14,cy-100,cx+18,cy-155,cx+42,cy-95],
+     [cx+40,cy-90,cx+62,cy-140,cx+52,cy-82]
+    ].forEach(([x1,y1,x2,y2,x3,y3])=>{
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.lineTo(x3,y3); ctx.fill();
+    });
+
+    // head
+    ctx.fillStyle='#FFDDB0';
+    ctx.beginPath(); ctx.arc(cx,cy-68,48,0,Math.PI*2); ctx.fill();
+
+    // headband
+    ctx.fillStyle='#FF2200';
+    ctx.beginPath(); ctx.roundRect(cx-50,cy-92,100,18,8); ctx.fill();
+    // plate on headband
+    ctx.fillStyle='#ddd';
+    ctx.beginPath(); ctx.roundRect(cx-10,cy-96,20,26,4); ctx.fill();
+    // scratch line on plate
+    ctx.strokeStyle='#aaa'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx-6,cy-89); ctx.lineTo(cx+6,cy-89); ctx.stroke();
+
+    // determined eyes (angled)
+    ctx.strokeStyle='#2a1800'; ctx.lineWidth=4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-24,cy-58); ctx.quadraticCurveTo(cx-14,cy-66,cx-4,cy-58); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+4,cy-58); ctx.quadraticCurveTo(cx+14,cy-66,cx+24,cy-58); ctx.stroke();
+
+    // body — orange jacket
+    ctx.fillStyle='#FF5500';
+    ctx.beginPath(); ctx.roundRect(cx-36,cy-18,72,88,18); ctx.fill();
+    // jacket detail line
+    ctx.strokeStyle='#FF8C00'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(cx-36,cy-4); ctx.lineTo(cx,cy+12); ctx.lineTo(cx+36,cy-4); ctx.stroke();
+
+    // left arm (forward)
+    ctx.strokeStyle='#FFDDB0'; ctx.lineWidth=22; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-34,cy-2); ctx.lineTo(cx-88,cy-42); ctx.stroke();
+    // left hand
+    ctx.fillStyle='#FFDDB0'; ctx.beginPath(); ctx.arc(cx-92,cy-46,12,0,Math.PI*2); ctx.fill();
+
+    // right arm (back)
+    ctx.beginPath(); ctx.moveTo(cx+34,cy-2); ctx.lineTo(cx+78,cy+40); ctx.stroke();
+    ctx.fillStyle='#FFDDB0'; ctx.beginPath(); ctx.arc(cx+82,cy+44,12,0,Math.PI*2); ctx.fill();
+
+    // left leg (forward, bent)
+    ctx.strokeStyle='#FFDDB0'; ctx.lineWidth=24; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-18,cy+70); ctx.lineTo(cx-32,cy+130); ctx.lineTo(cx-16,cy+160); ctx.stroke();
+    // right leg (back, extended)
+    ctx.beginPath(); ctx.moveTo(cx+18,cy+70); ctx.lineTo(cx+50,cy+130); ctx.lineTo(cx+80,cy+116); ctx.stroke();
+
+    // shoes
+    ctx.fillStyle='#222';
+    ctx.beginPath(); ctx.ellipse(cx-14,cy+164,28,13,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx+84,cy+120,28,13,-0.3,0,Math.PI*2); ctx.fill();
+
+    // CALO text at bottom
+    ctx.fillStyle='#FFF5E0';
+    ctx.font='bold 72px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+    ctx.letterSpacing='12px';
+    ctx.fillText('CALO', S/2+6, 480);
+
+    const link = document.createElement('link');
+    link.rel = 'apple-touch-icon';
+    link.href = c.toDataURL('image/png');
+    document.head.appendChild(link);
+  } catch(e){}
+})();
 </script>
 </body>
 </html>
