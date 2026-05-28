@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Calo Tracker">
+<title>Calo Tracker</title>
+<style>
+:root {
+  --green:#3B6D11;--green-bg:#EAF3DE;--green-bd:#97C459;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-bd:#F09595;
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-bd:#85B7EB;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-bd:#EF9F27;
+  --text:#1a1a1a;--text2:#666;--text3:#aaa;
+  --bg:#f2f2f7;--card:#fff;--bd:rgba(0,0,0,0.1);
+  --r:12px;--rs:8px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --green:#9FE1CB;--green-bg:#085041;--green-bd:#1D9E75;
+  --red:#F09595;--red-bg:#501313;--red-bd:#A32D2D;
+  --blue:#85B7EB;--blue-bg:#042C53;--blue-bd:#185FA5;
+  --amber:#FAC775;--amber-bg:#412402;--amber-bd:#BA7517;
+  --text:#f0f0f0;--text2:#aaa;--text3:#555;
+  --bg:#111;--card:#1c1c1e;--bd:rgba(255,255,255,0.1);
+}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.app{max-width:480px;margin:0 auto;padding-bottom:40px}
+
+/* Header */
+.hdr{background:var(--card);border-bottom:.5px solid var(--bd);padding:14px 16px 10px;position:sticky;top:0;z-index:20}
+.hdr-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hdr-top h1{font-size:18px;font-weight:700;flex:1}
+.weight-row{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+.weight-row input{width:58px;font-size:14px;font-weight:600;padding:4px 8px;border:.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);text-align:center}
+.day-nav{display:flex;align-items:center;gap:8px}
+.day-nav button{background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);padding:6px 16px;font-size:20px;color:var(--text);cursor:pointer}
+.day-lbl{flex:1;text-align:center;font-size:15px;font-weight:600}
+
+/* Goal */
+.goal-bar{background:var(--card);border-bottom:.5px solid var(--bd);padding:9px 16px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.goal-bar input{width:70px;font-size:14px;font-weight:600;padding:4px 8px;border:.5px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--text);text-align:center}
+
+/* Summary */
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;padding:12px 16px}
+.mc{background:var(--card);border-radius:var(--rs);padding:11px 12px;border:.5px solid var(--bd)}
+.mc .lb{font-size:11px;color:var(--text2);margin-bottom:3px}
+.mc .vl{font-size:21px;font-weight:700}
+.mc .ut{font-size:11px;font-weight:400;color:var(--text2)}
+
+/* Progress */
+.prog{padding:0 16px 10px}
+.prog-bg{background:var(--bd);border-radius:4px;height:8px;overflow:hidden;margin:4px 0}
+.prog-fill{height:100%;border-radius:4px;transition:width .4s}
+.prog-lb{display:flex;justify-content:space-between;font-size:12px;color:var(--text2)}
+
+/* Tabs - main */
+.main-tabs{display:flex;padding:0 16px;gap:8px;background:var(--card);border-top:.5px solid var(--bd);border-bottom:.5px solid var(--bd)}
+.mt{flex:1;padding:10px 8px;font-size:14px;font-weight:600;text-align:center;cursor:pointer;border-bottom:2.5px solid transparent;color:var(--text2)}
+.mt.active-in{color:var(--green);border-bottom-color:var(--green)}
+.mt.active-out{color:var(--red);border-bottom-color:var(--red)}
+
+/* Panel */
+.panel{background:var(--card);border-bottom:.5px solid var(--bd);padding:12px 16px}
+.sec{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+
+/* Cat scroll */
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.ctag{padding:5px 12px;font-size:12px;border:.5px solid var(--bd);border-radius:20px;white-space:nowrap;cursor:pointer;background:var(--card);color:var(--text2);flex-shrink:0}
+.ctag.on-in{background:var(--green-bg);color:var(--green);border-color:var(--green-bd)}
+.ctag.on-out{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+
+/* Search */
+.srow{display:flex;gap:6px;margin-bottom:8px}
+.srow input{flex:1;padding:8px 12px;font-size:14px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--text)}
+.srow button{padding:8px 12px;font-size:13px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--text2);cursor:pointer}
+
+/* Food grid */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:200px;overflow-y:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.ex-grid{display:flex;flex-direction:column;gap:5px;max-height:340px;overflow-y:auto;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+.ex-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);cursor:pointer;transition:all .15s}
+.ex-card:active{transform:scale(0.98)}
+.ex-card.sel-out{border-color:var(--red-bd);background:var(--red-bg)}
+.ex-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0}
+.ex-info{flex:1;min-width:0}
+.ex-name{font-size:13px;font-weight:600;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ex-note{font-size:11px;color:var(--text2);display:block;margin-top:1px}
+.ex-kcal-badge{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;gap:1px}
+.ex-kcal-main{font-size:13px;font-weight:700;color:var(--red)}
+.ex-kcal-sub{font-size:10px;color:var(--text3)}
+.met-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-right:2px}
+
+.fbtn{padding:9px 10px;background:var(--bg);border:.5px solid var(--bd);border-radius:var(--rs);cursor:pointer;text-align:left}
+.fbtn.sel{border-color:var(--blue-bd);background:var(--blue-bg)}
+.fbtn.sel-out{border-color:var(--red-bd);background:var(--red-bg)}
+.fn{font-size:13px;font-weight:500;color:var(--text);display:block}
+.fm{font-size:11px;color:var(--text2)}
+
+/* Qty */
+.qrow{display:grid;grid-template-columns:1fr 80px;gap:8px;align-items:center;margin-bottom:6px}
+.qrow label{font-size:13px;color:var(--text2)}
+.qrow input{padding:9px 10px;font-size:16px;font-weight:600;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--text);text-align:center}
+.preview{font-size:13px;font-weight:600;min-height:20px;margin-bottom:8px}
+.prev-in{color:var(--green)} .prev-out{color:var(--red)}
+
+/* Buttons */
+.bfull{width:100%;padding:13px;font-size:15px;font-weight:700;border-radius:var(--rs);cursor:pointer;border:none;margin-top:4px;letter-spacing:.01em}
+.bfull-in{background:var(--green);color:#fff}
+.bfull-out{background:var(--red);color:#fff}
+
+/* Divider */
+hr{border:none;border-top:.5px solid var(--bd);margin:12px 0}
+
+/* Custom */
+.cinputs{display:grid;grid-template-columns:1fr 80px;gap:8px;margin-bottom:8px}
+.cinputs input{padding:9px 12px;font-size:14px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg);color:var(--text)}
+
+/* Entries */
+.esec{padding:12px 16px}
+.etitle{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.entry{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:.5px solid var(--bd);border-radius:var(--rs);margin-bottom:6px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.di{background:#639922}.do{background:#E24B4A}
+.en{flex:1;font-size:13px;color:var(--text);min-width:0}
+.ety{font-size:11px;padding:2px 7px;border-radius:4px;font-weight:500;flex-shrink:0}
+.tyi{background:var(--green-bg);color:var(--green)}
+.tyo{background:var(--red-bg);color:var(--red)}
+.ek{font-size:13px;font-weight:700;min-width:65px;text-align:right;flex-shrink:0}
+.eki{color:var(--green)}.eko{color:var(--red)}
+.dbtn{background:none;border:none;font-size:18px;color:var(--text3);cursor:pointer;padding:2px 6px;flex-shrink:0}
+.empty{text-align:center;padding:2rem 1rem;color:var(--text2);font-size:14px;border:1px dashed var(--bd);border-radius:var(--r)}
+
+/* Save to library toggle */
+.save-toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);cursor:pointer;margin-bottom:8px;padding:7px 10px;border:.5px solid var(--bd);border-radius:var(--rs);background:var(--bg)}
+.save-toggle input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer;flex-shrink:0}
+.save-toggle span{flex:1}
+
+/* My library header */
+.mylib-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mylib-hdr span{font-size:11px;color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0}
+
+/* My library food card */
+.mylib-fbtn{position:relative;padding:9px 10px;background:var(--bg);border:.5px solid var(--amber-bd);border-radius:var(--rs);cursor:pointer;text-align:left}
+.mylib-fbtn.sel{border-color:var(--blue-bd);background:var(--blue-bg)}
+.mylib-fbtn.sel-out{border-color:var(--red-bd);background:var(--red-bg)}
+.mylib-del{position:absolute;top:4px;right:4px;background:none;border:none;font-size:13px;color:var(--text3);cursor:pointer;padding:0 3px;line-height:1}
+.mylib-del:hover{color:var(--red)}
+
+/* My library exercise card */
+.mylib-ex-card{position:relative;display:flex;align-items:center;gap:10px;padding:10px 36px 10px 12px;background:var(--bg);border:.5px solid var(--amber-bd);border-radius:var(--rs);cursor:pointer}
+.mylib-ex-card.sel-out{border-color:var(--red-bd);background:var(--red-bg)}
+.mylib-ex-del{position:absolute;top:50%;right:10px;transform:translateY(-50%);background:none;border:none;font-size:14px;color:var(--text3);cursor:pointer;padding:2px 4px}
+.mylib-ex-del:hover{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="hdr-top">
+    <h1>🥗 Calo Tracker</h1>
+    <div class="weight-row">
+      <span>⚖️</span>
+      <input type="number" id="weightInput" value="65" min="30" max="150" step="0.5" inputmode="decimal" oninput="saveWeight();renderExerciseLib()">
+      <span>kg</span>
+    </div>
+  </div>
+  <div class="day-nav">
+    <button onclick="changeDay(-1)">‹</button>
+    <div class="day-lbl" id="dayLbl"></div>
+    <button onclick="changeDay(1)">›</button>
+  </div>
+</div>
+
+<div class="goal-bar">
+  🎯 Mục tiêu: <input type="number" id="goalInput" value="2000" step="50" inputmode="numeric" oninput="saveGoal();render()"> kcal / ngày
+</div>
+
+<div class="summary" id="summary"></div>
+<div class="prog" id="prog"></div>
+
+<div class="main-tabs">
+  <div class="mt active-in" id="mt-in" onclick="setMainTab('in')">🍽 Nạp vào</div>
+  <div class="mt" id="mt-out" onclick="setMainTab('out')">🔥 Tiêu hao</div>
+</div>
+
+<!-- FOOD PANEL -->
+<div class="panel" id="panel-in">
+  <div class="sec">Chọn từ thư viện thực phẩm</div>
+  <div class="cats" id="food-cats"></div>
+  <div class="srow">
+    <input type="text" id="food-search" placeholder="Tìm thực phẩm..." oninput="filterFoods()">
+    <button onclick="document.getElementById('food-search').value='';filterFoods()">Xoá</button>
+  </div>
+  <div class="fgrid" id="food-grid"></div>
+  <div class="preview prev-in" id="food-preview"></div>
+  <div class="qrow" id="food-qrow" style="display:none">
+    <label id="food-qlabel">Khối lượng (g)</label>
+    <input type="number" id="food-qty" value="100" min="1" step="1" inputmode="decimal" oninput="updateFoodPreview()">
+  </div>
+  <button class="bfull bfull-in" id="food-add-btn" style="display:none" onclick="addFromFoodLib()">+ Thêm vào nhật ký</button>
+  <hr>
+  <div class="sec">Nhập thủ công</div>
+  <div class="cinputs">
+    <input type="text" id="food-custom-name" placeholder="Tên món ăn / đồ uống...">
+    <input type="number" id="food-custom-kcal" placeholder="kcal" inputmode="numeric" min="1">
+  </div>
+  <label class="save-toggle">
+    <input type="checkbox" id="food-save-lib"> <span>💾 Lưu vào thư viện để dùng lại</span>
+  </label>
+  <button class="bfull bfull-in" onclick="addCustomFood()">+ Thêm</button>
+  <div id="food-mylib-wrap" style="display:none">
+    <hr>
+    <div class="sec mylib-hdr">⭐ Thư viện của tôi <span id="food-mylib-count"></span></div>
+    <div class="fgrid" id="food-mylib-grid"></div>
+  </div>
+</div>
+
+<!-- EXERCISE PANEL -->
+<div class="panel" id="panel-out" style="display:none">
+  <div class="sec">Chọn hoạt động — tự tính theo cân nặng & thời gian</div>
+  <div class="cats" id="ex-cats"></div>
+  <div class="srow">
+    <input type="text" id="ex-search" placeholder="🔍 Tìm hoạt động..." oninput="filterExercises()">
+    <button onclick="document.getElementById('ex-search').value='';filterExercises()">Xoá</button>
+  </div>
+  <div class="ex-grid" id="ex-grid"></div>
+  <div class="preview prev-out" id="ex-preview"></div>
+  <div class="qrow" id="ex-qrow" style="display:none">
+    <label>⏱ Thời gian (phút)</label>
+    <input type="number" id="ex-min" value="30" min="1" step="1" inputmode="numeric" oninput="updateExPreview()">
+  </div>
+  <button class="bfull bfull-out" id="ex-add-btn" style="display:none" onclick="addFromExLib()">+ Thêm vào nhật ký</button>
+  <hr>
+  <div class="sec">Nhập thủ công (đã biết kcal)</div>
+  <div class="cinputs">
+    <input type="text" id="ex-custom-name" placeholder="Tên hoạt động...">
+    <input type="number" id="ex-custom-kcal" placeholder="kcal" inputmode="numeric" min="1">
+  </div>
+  <label class="save-toggle">
+    <input type="checkbox" id="ex-save-lib"> <span>💾 Lưu vào thư viện để dùng lại</span>
+  </label>
+  <button class="bfull bfull-out" onclick="addCustomExercise()">+ Thêm</button>
+  <div id="ex-mylib-wrap" style="display:none">
+    <hr>
+    <div class="sec mylib-hdr">⭐ Thư viện của tôi <span id="ex-mylib-count"></span></div>
+    <div class="ex-grid" id="ex-mylib-grid"></div>
+  </div>
+</div>
+
+<div class="esec">
+  <div class="etitle" id="listTitle">Hôm nay</div>
+  <div id="entries"></div>
+</div>
+
+</div>
+<script>
+// ─── FOOD LIBRARY ───────────────────────────────────────
+const FOODS = [
+  {id:'com',name:'Cơm trắng',cat:'tinh-bot',unit:'g',kcal:130,note:'per 100g'},
+  {id:'com-bat',name:'Bát cơm (đầy)',cat:'tinh-bot',unit:'bát',kcal:200,note:'~150g',fixed:1},
+  {id:'banh-mi',name:'Bánh mì',cat:'tinh-bot',unit:'g',kcal:265,note:'per 100g'},
+  {id:'bun',name:'Bún tươi',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
+  {id:'pho',name:'Bánh phở',cat:'tinh-bot',unit:'g',kcal:109,note:'per 100g'},
+  {id:'mi-goi',name:'Mì gói (1 gói)',cat:'tinh-bot',unit:'gói',kcal:350,note:'~75g',fixed:1},
+  {id:'khoai-lang',name:'Khoai lang luộc',cat:'tinh-bot',unit:'g',kcal:86,note:'per 100g'},
+  {id:'xoi',name:'Xôi trắng',cat:'tinh-bot',unit:'g',kcal:175,note:'per 100g'},
+
+  {id:'trung-ga-luoc',name:'Trứng gà luộc',cat:'trung',unit:'quả',kcal:68,note:'~50g/quả',fixed:1},
+  {id:'trung-chien',name:'Trứng chiên',cat:'trung',unit:'quả',kcal:95,note:'~50g',fixed:1},
+  {id:'trung-vit',name:'Trứng vịt luộc',cat:'trung',unit:'quả',kcal:130,note:'~65g/quả',fixed:1},
+
+  {id:'uc-ga',name:'Ức gà (không da)',cat:'ga',unit:'g',kcal:165,note:'per 100g luộc'},
+  {id:'dui-ga',name:'Đùi gà (không da)',cat:'ga',unit:'g',kcal:180,note:'per 100g'},
+  {id:'chan-ga-luoc',name:'Chân gà luộc',cat:'ga',unit:'chiếc',kcal:61,note:'~28g/chiếc',fixed:1},
+  {id:'ga-ta',name:'Gà ta luộc (có da)',cat:'ga',unit:'g',kcal:199,note:'per 100g'},
+  {id:'canh-ga',name:'Cánh gà',cat:'ga',unit:'g',kcal:220,note:'per 100g có da'},
+
+  {id:'thit-than',name:'Thịt lợn thăn',cat:'lon',unit:'g',kcal:143,note:'per 100g nạc'},
+  {id:'ba-chi',name:'Thịt ba chỉ',cat:'lon',unit:'g',kcal:260,note:'per 100g'},
+  {id:'suon-lon',name:'Sườn lợn',cat:'lon',unit:'g',kcal:280,note:'per 100g'},
+  {id:'gio-lua',name:'Giò lụa',cat:'lon',unit:'g',kcal:224,note:'per 100g'},
+
+  {id:'bo-than',name:'Thịt bò thăn',cat:'bo',unit:'g',kcal:182,note:'per 100g'},
+  {id:'bo-bap',name:'Thịt bò bắp',cat:'bo',unit:'g',kcal:200,note:'per 100g'},
+
+  {id:'vit-luoc',name:'Vịt luộc (bỏ da)',cat:'vit',unit:'g',kcal:135,note:'per 100g'},
+  {id:'vit-co-da',name:'Vịt luộc (có da)',cat:'vit',unit:'g',kcal:220,note:'per 100g'},
+  {id:'vit-quay',name:'Vịt quay',cat:'vit',unit:'g',kcal:190,note:'per 100g'},
+
+  {id:'ca-hoi',name:'Cá hồi',cat:'hai-san',unit:'g',kcal:208,note:'per 100g'},
+  {id:'ca-ngu',name:'Cá ngừ',cat:'hai-san',unit:'g',kcal:144,note:'per 100g'},
+  {id:'tom-hap',name:'Tôm hấp',cat:'hai-san',unit:'g',kcal:99,note:'per 100g'},
+  {id:'muc',name:'Mực',cat:'hai-san',unit:'g',kcal:92,note:'per 100g'},
+  {id:'ca-tra',name:'Cá tra phi lê',cat:'hai-san',unit:'g',kcal:90,note:'per 100g'},
+
+  {id:'bia-330',name:'Bia (lon 330ml)',cat:'uong',unit:'lon',kcal:143,note:'330ml',fixed:1},
+  {id:'bia-500',name:'Bia (chai 500ml)',cat:'uong',unit:'chai',kcal:215,note:'500ml',fixed:1},
+  {id:'coca',name:'Nước ngọt có ga (lon)',cat:'uong',unit:'lon',kcal:140,note:'330ml',fixed:1},
+  {id:'nuoc-ep',name:'Nước ép trái cây',cat:'uong',unit:'ml',kcal:45,note:'per 100ml'},
+  {id:'sua-tuoi',name:'Sữa tươi',cat:'uong',unit:'ml',kcal:61,note:'per 100ml'},
+  {id:'ca-phe-sua',name:'Cà phê sữa đá',cat:'uong',unit:'ly',kcal:150,note:'~300ml',fixed:1},
+  {id:'tra-sua',name:'Trà sữa',cat:'uong',unit:'ly',kcal:320,note:'~500ml',fixed:1},
+
+  {id:'pho-bo',name:'Bát phở bò',cat:'mon',unit:'bát',kcal:420,note:'~500g',fixed:1},
+  {id:'bun-bo',name:'Bát bún bò',cat:'mon',unit:'bát',kcal:380,note:'~400g',fixed:1},
+  {id:'bun-cha',name:'Bún chả',cat:'mon',unit:'suất',kcal:450,note:'1 suất',fixed:1},
+  {id:'com-tam',name:'Cơm tấm sườn',cat:'mon',unit:'đĩa',kcal:650,note:'1 đĩa',fixed:1},
+  {id:'banh-mi-op',name:'Bánh mì ốp la',cat:'mon',unit:'ổ',kcal:350,note:'1 ổ',fixed:1},
+
+  {id:'dau-an',name:'Dầu ăn',cat:'khac',unit:'muỗng canh',kcal:120,note:'~14ml',fixed:1},
+  {id:'duong',name:'Đường',cat:'khac',unit:'g',kcal:387,note:'per 100g'},
+];
+
+const FOOD_CATS = [
+  {id:'all',label:'Tất cả'},
+  {id:'tinh-bot',label:'🍚 Tinh bột'},
+  {id:'trung',label:'🥚 Trứng'},
+  {id:'ga',label:'🍗 Gà'},
+  {id:'lon',label:'🥩 Lợn'},
+  {id:'bo',label:'🥩 Bò'},
+  {id:'vit',label:'🦆 Vịt'},
+  {id:'hai-san',label:'🐟 Hải sản'},
+  {id:'uong',label:'🍺 Đồ uống'},
+  {id:'mon',label:'🍜 Món ăn'},
+  {id:'khac',label:'🧂 Khác'},
+];
+
+// ─── EXERCISE LIBRARY (MET-based) ───────────────────────
+// kcal = MET × weight(kg) × hours
+const EXERCISES = [
+  // 🚶 Đi lại & Xe cộ
+  {id:'di-bo-cham',name:'Đi bộ chậm',cat:'di-lai',met:2.5,note:'Dạo phố, <4km/h',icon:'🚶'},
+  {id:'di-bo-thuong',name:'Đi bộ thường',cat:'di-lai',met:3.5,note:'Đi làm, đi chợ ~5km/h',icon:'🚶'},
+  {id:'di-bo-nhanh',name:'Đi bộ nhanh',cat:'di-lai',met:4.5,note:'Cố ý tập ~6km/h',icon:'🚶'},
+  {id:'di-bo-nui',name:'Đi bộ leo dốc',cat:'di-lai',met:6.0,note:'Cầu thang, dốc cao',icon:'⛰️'},
+  {id:'di-xe-may',name:'Đi xe máy',cat:'di-lai',met:2.5,note:'Thời tiết bình thường',icon:'🛵'},
+  {id:'di-xe-may-nong',name:'Đi xe máy trời nóng',cat:'di-lai',met:3.2,note:'Hà Nội/HCM >35°C',icon:'🛵'},
+  {id:'di-xe-may-tac',name:'Đi xe máy tắc đường',cat:'di-lai',met:2.8,note:'Dừng đi, căng thẳng',icon:'🛵'},
+  {id:'di-xe-o-to',name:'Lái ô tô',cat:'di-lai',met:2.0,note:'Ngồi, tập trung nhẹ',icon:'🚗'},
+  {id:'di-xe-o-to-tac',name:'Lái ô tô tắc đường',cat:'di-lai',met:2.2,note:'Căng thẳng, AC bật',icon:'🚗'},
+  {id:'di-xe-dap',name:'Đạp xe chậm',cat:'di-lai',met:4.0,note:'<16km/h, nhàn',icon:'🚴'},
+  {id:'di-xe-dap-vua',name:'Đạp xe vừa',cat:'di-lai',met:6.8,note:'16–20km/h',icon:'🚴'},
+  {id:'di-xe-dap-nhanh',name:'Đạp xe nhanh',cat:'di-lai',met:10.0,note:'>20km/h',icon:'🚴'},
+  {id:'xe-buyt',name:'Đứng trên xe buýt',cat:'di-lai',met:1.8,note:'Bám tay vịn, giữ thăng bằng',icon:'🚌'},
+
+  // 🏃 Chạy bộ
+  {id:'chay-6',name:'Chạy bộ nhẹ',cat:'chay',met:6.0,note:'Jogging ~6km/h',icon:'🏃'},
+  {id:'chay-8',name:'Chạy bộ vừa',cat:'chay',met:8.0,note:'~8km/h, pace trung bình',icon:'🏃'},
+  {id:'chay-10',name:'Chạy bộ nhanh',cat:'chay',met:10.0,note:'~10km/h',icon:'🏃'},
+  {id:'chay-12',name:'Chạy tốc độ cao',cat:'chay',met:12.5,note:'~12km/h',icon:'🏃'},
+  {id:'chay-may',name:'Chạy máy treadmill',cat:'chay',met:7.0,note:'Tốc độ trung bình',icon:'🏃'},
+  {id:'chay-bo-cau-thang',name:'Chạy cầu thang',cat:'chay',met:15.0,note:'Sprint lên xuống',icon:'🏃'},
+
+  // 💪 Gym & Tập luyện
+  {id:'gym-nhe',name:'Khởi động / Stretching',cat:'gym',met:2.5,note:'Warm-up, giãn cơ',icon:'🤸'},
+  {id:'gym-ta',name:'Tập tạ nhẹ–vừa',cat:'gym',met:5.0,note:'Bench press, squat',icon:'💪'},
+  {id:'gym-ta-nang',name:'Tập tạ nặng',cat:'gym',met:7.0,note:'Heavy compound, powerlifting',icon:'💪'},
+  {id:'gym-bung',name:'Tập bụng / Core',cat:'gym',met:3.8,note:'Plank, crunch, leg raise',icon:'💪'},
+  {id:'gym-hit',name:'HIIT',cat:'gym',met:10.0,note:'Circuit, Tabata cường độ cao',icon:'🔥'},
+  {id:'gym-cardio',name:'Cardio máy elliptical',cat:'gym',met:5.0,note:'Cross trainer',icon:'🏋️'},
+  {id:'gym-rope',name:'Nhảy dây',cat:'gym',met:10.0,note:'Liên tục không nghỉ',icon:'🪢'},
+  {id:'gym-deadlift',name:'Deadlift / Powerlifting',cat:'gym',met:6.0,note:'Nghỉ giữa các set',icon:'💪'},
+  {id:'gym-push',name:'Hít đất / Push-up',cat:'gym',met:3.8,note:'Bodyweight tại nhà',icon:'💪'},
+  {id:'gym-pullup',name:'Kéo xà / Pull-up',cat:'gym',met:4.5,note:'Xà đơn, xà kép',icon:'💪'},
+
+  // ⚽ Thể thao
+  {id:'bong-da',name:'Bóng đá',cat:'the-thao',met:7.0,note:'Phong trào, cường độ vừa',icon:'⚽'},
+  {id:'bong-ro',name:'Bóng rổ',cat:'the-thao',met:6.5,note:'Bán chuyên, half-court',icon:'🏀'},
+  {id:'bong-chuyen',name:'Bóng chuyền',cat:'the-thao',met:4.0,note:'Không thi đấu chính thức',icon:'🏐'},
+  {id:'boi',name:'Bơi lội nhẹ',cat:'the-thao',met:6.0,note:'Bơi tự do, nhịp nhẹ',icon:'🏊'},
+  {id:'boi-vua',name:'Bơi lội vừa',cat:'the-thao',met:8.0,note:'Liên tục, đổi kiểu bơi',icon:'🏊'},
+  {id:'boi-nhanh',name:'Bơi cường độ cao',cat:'the-thao',met:10.0,note:'Lap swimming, thi đấu',icon:'🏊'},
+  {id:'cau-long',name:'Cầu lông',cat:'the-thao',met:7.0,note:'Đánh đơn',icon:'🏸'},
+  {id:'tennis',name:'Tennis',cat:'the-thao',met:7.5,note:'Đánh đơn cường độ vừa',icon:'🎾'},
+  {id:'bong-ban',name:'Bóng bàn',cat:'the-thao',met:4.0,note:'Đánh đơn phong trào',icon:'🏓'},
+  {id:'yoga',name:'Yoga',cat:'the-thao',met:2.5,note:'Hatha yoga, giãn cơ',icon:'🧘'},
+  {id:'yoga-nang',name:'Yoga nặng / Power yoga',cat:'the-thao',met:4.0,note:'Vinyasa, Ashtanga',icon:'🧘'},
+  {id:'zumba',name:'Zumba / Aerobic',cat:'the-thao',met:7.0,note:'Lớp nhảy cường độ vừa',icon:'💃'},
+  {id:'pickleball',name:'Pickleball',cat:'the-thao',met:5.5,note:'Phong trào, outdoor',icon:'🏓'},
+  {id:'golf',name:'Golf (đi bộ)',cat:'the-thao',met:4.3,note:'Không dùng xe golf',icon:'⛳'},
+
+  // 💼 Công việc văn phòng & Sáng tạo
+  {id:'van-phong',name:'Làm việc văn phòng',cat:'congviec',met:1.5,note:'Ngồi máy tính, gõ phím',icon:'💻'},
+  {id:'thiet-ke',name:'Thiết kế đồ họa',cat:'congviec',met:1.6,note:'Photoshop, Illustrator, Figma',icon:'🎨'},
+  {id:'thiet-ke-3d',name:'Dựng 3D / Render',cat:'congviec',met:1.5,note:'Blender, C4D, SketchUp',icon:'🖥️'},
+  {id:'code-lap-trinh',name:'Lập trình / Coding',cat:'congviec',met:1.5,note:'Ngồi gõ code tập trung',icon:'💻'},
+  {id:'hoc-online',name:'Học online / Xem video',cat:'congviec',met:1.3,note:'Ngồi xem, ghi chép',icon:'📚'},
+  {id:'hop-dung',name:'Họp đứng / Thuyết trình',cat:'congviec',met:2.0,note:'Đứng, di chuyển nhẹ',icon:'🗣️'},
+  {id:'hop-ngoi',name:'Họp ngồi',cat:'congviec',met:1.5,note:'Ngồi cả buổi họp',icon:'🗣️'},
+  {id:'choi-game',name:'Chơi game (ngồi)',cat:'congviec',met:1.3,note:'PC/console, ngồi yên',icon:'🎮'},
+  {id:'choi-game-vr',name:'Chơi game VR / thể chất',cat:'congviec',met:3.5,note:'Beat Saber, Ring Fit',icon:'🎮'},
+  {id:'livestream',name:'Livestream / Content creator',cat:'congviec',met:1.8,note:'Đứng, nói chuyện, di chuyển nhẹ',icon:'📱'},
+  {id:'chup-anh',name:'Chụp ảnh / Quay phim ngoài trời',cat:'congviec',met:3.0,note:'Đi lại, bưng máy',icon:'📸'},
+
+  // 🏠 Sinh hoạt hàng ngày
+  {id:'ngoi-choi',name:'Nghỉ ngơi / Xem TV',cat:'sinh-hoat',met:1.2,note:'Nằm hoặc ngồi yên',icon:'🛋️'},
+  {id:'dung-lam',name:'Đứng làm việc',cat:'sinh-hoat',met:2.0,note:'Standing desk',icon:'🧍'},
+  {id:'nau-an',name:'Nấu ăn / Làm bếp',cat:'sinh-hoat',met:2.5,note:'Đứng, di chuyển, bưng bê nhẹ',icon:'🍳'},
+  {id:'nau-an-nhieu',name:'Nấu nhiều món / tiệc',cat:'sinh-hoat',met:3.5,note:'Bếp 1–2 tiếng liên tục',icon:'🍳'},
+  {id:'don-nha',name:'Dọn dẹp nhà cửa',cat:'sinh-hoat',met:3.5,note:'Lau nhà, hút bụi',icon:'🧹'},
+  {id:'giat-do',name:'Giặt giũ / Phơi đồ',cat:'sinh-hoat',met:2.3,note:'Vò tay, phơi, gấp',icon:'👕'},
+  {id:'choi-nha',name:'Chăm cây / Làm vườn',cat:'sinh-hoat',met:3.5,note:'Cúi xuống, đứng xen kẽ',icon:'🌿'},
+  {id:'leo-cau-thang',name:'Leo cầu thang',cat:'sinh-hoat',met:8.0,note:'Liên tục, không nghỉ',icon:'🪜'},
+  {id:'mang-hang',name:'Mang vác hàng nặng',cat:'sinh-hoat',met:5.0,note:'>10kg, đi bộ quãng ngắn',icon:'📦'},
+  {id:'di-cho',name:'Đi chợ / Siêu thị',cat:'sinh-hoat',met:2.8,note:'Đẩy xe, cầm giỏ đi lại',icon:'🛒'},
+  {id:'cham-con',name:'Chăm sóc trẻ nhỏ',cat:'sinh-hoat',met:3.0,note:'Bế, chơi, chạy theo con',icon:'👶'},
+  {id:'tam-cho',name:'Tắm cho thú cưng',cat:'sinh-hoat',met:3.0,note:'Vật lộn với chó/mèo',icon:'🐾'},
+];
+
+const EX_CATS = [
+  {id:'all',label:'⚡ Tất cả'},
+  {id:'di-lai',label:'🚶 Đi lại & Xe'},
+  {id:'chay',label:'🏃 Chạy bộ'},
+  {id:'gym',label:'💪 Gym'},
+  {id:'the-thao',label:'⚽ Thể thao'},
+  {id:'congviec',label:'💼 Công việc'},
+  {id:'sinh-hoat',label:'🏠 Sinh hoạt'},
+];
+
+// ─── STATE ───────────────────────────────────────────────
+let mainTab = 'in';
+let foodCat = 'all', exCat = 'all';
+let selFood = null, selEx = null;
+let curDate = new Date(); curDate.setHours(0,0,0,0);
+
+function dateKey(d){ return d.toISOString().slice(0,10); }
+function getData(){ try{ return JSON.parse(localStorage.getItem('calo_v3')||'{}'); }catch(e){ return {}; } }
+function saveData(d){ localStorage.setItem('calo_v3', JSON.stringify(d)); }
+function getGoal(){ return parseInt(localStorage.getItem('calo_goal_v3')||'2000'); }
+function saveGoal(){ localStorage.setItem('calo_goal_v3', document.getElementById('goalInput').value||2000); }
+function getWeight(){ return parseFloat(localStorage.getItem('calo_weight_v3')||'65'); }
+function saveWeight(){ localStorage.setItem('calo_weight_v3', document.getElementById('weightInput').value||65); }
+
+function changeDay(d){
+  curDate = new Date(curDate.getTime() + d*86400000);
+  render();
+}
+
+function setMainTab(t){
+  mainTab = t;
+  document.getElementById('mt-in').className = 'mt' + (t==='in' ? ' active-in' : '');
+  document.getElementById('mt-out').className = 'mt' + (t==='out' ? ' active-out' : '');
+  document.getElementById('panel-in').style.display = t==='in' ? 'block' : 'none';
+  document.getElementById('panel-out').style.display = t==='out' ? 'block' : 'none';
+}
+
+// ─── FOOD ─────────────────────────────────────────────────
+function buildFoodCats(){
+  document.getElementById('food-cats').innerHTML = FOOD_CATS.map(c =>
+    `<div class="ctag${c.id===foodCat?' on-in':''}" onclick="setFoodCat('${c.id}')">${c.label}</div>`
+  ).join('');
+}
+function setFoodCat(id){ foodCat=id; buildFoodCats(); filterFoods(); }
+
+function filterFoods(){
+  const q = (document.getElementById('food-search').value||'').toLowerCase();
+  let list = foodCat==='all' ? FOODS : FOODS.filter(f=>f.cat===foodCat);
+  if(q) list = list.filter(f=>f.name.toLowerCase().includes(q));
+  document.getElementById('food-grid').innerHTML = list.map(f =>
+    `<div class="fbtn${selFood&&selFood.id===f.id?' sel':''}" onclick="selectFood('${f.id}')">
+      <span class="fn">${f.name}</span><span class="fm">${f.note}</span>
+    </div>`
+  ).join('') || '<div style="font-size:13px;color:var(--text2);padding:8px;grid-column:span 2">Không tìm thấy</div>';
+}
+
+function selectFood(id){
+  selFood = FOODS.find(f=>f.id===id);
+  filterFoods();
+  const qrow = document.getElementById('food-qrow');
+  const addBtn = document.getElementById('food-add-btn');
+  if(selFood){
+    qrow.style.display='grid'; addBtn.style.display='block';
+    const lbl = document.getElementById('food-qlabel');
+    const inp = document.getElementById('food-qty');
+    if(selFood.fixed){ lbl.textContent=`Số lượng (${selFood.unit})`; inp.value=1; inp.step=1; }
+    else if(selFood.unit==='ml'){ lbl.textContent='Thể tích (ml)'; inp.value=200; inp.step=10; }
+    else { lbl.textContent='Khối lượng (g)'; inp.value=100; inp.step=10; }
+    updateFoodPreview();
+    setTimeout(()=>qrow.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  } else { qrow.style.display='none'; addBtn.style.display='none'; document.getElementById('food-preview').textContent=''; }
+}
+
+function calcFoodKcal(food, qty){
+  if(food.fixed) return Math.round(food.kcal * qty);
+  return Math.round(food.kcal * qty / 100);
+}
+
+function updateFoodPreview(){
+  if(!selFood){ document.getElementById('food-preview').textContent=''; return; }
+  const qty = parseFloat(document.getElementById('food-qty').value)||0;
+  const k = calcFoodKcal(selFood, qty);
+  const u = selFood.fixed ? selFood.unit : (selFood.unit==='ml'?'ml':'g');
+  document.getElementById('food-preview').textContent = `${selFood.name} — ${qty} ${u} → ${k} kcal`;
+}
+
+function addFromFoodLib(){
+  if(!selFood) return;
+  const qty = parseFloat(document.getElementById('food-qty').value)||0;
+  if(!qty) return;
+  const k = calcFoodKcal(selFood, qty);
+  const u = selFood.fixed ? selFood.unit : (selFood.unit==='ml'?'ml':'g');
+  _addEntry(`${selFood.name} (${qty}${u})`, k, 'in');
+  selFood=null;
+  document.getElementById('food-qrow').style.display='none';
+  document.getElementById('food-add-btn').style.display='none';
+  document.getElementById('food-preview').textContent='';
+  filterFoods();
+}
+
+function addCustomFood(){
+  const name = document.getElementById('food-custom-name').value.trim();
+  const kcal = parseInt(document.getElementById('food-custom-kcal').value);
+  if(!name||!kcal||kcal<=0) return;
+  const saveLib = document.getElementById('food-save-lib').checked;
+  if(saveLib){
+    const lib = getMyFoodLib();
+    const id = 'myf_' + Date.now();
+    lib.push({id, name, kcal, note:'Tự thêm', unit:'phần', fixed:1});
+    saveMyFoodLib(lib);
+    renderMyFoodLib();
+  }
+  _addEntry(name, kcal, 'in');
+  document.getElementById('food-custom-name').value='';
+  document.getElementById('food-custom-kcal').value='';
+}
+
+function addCustomExercise(){
+  const name = document.getElementById('ex-custom-name').value.trim();
+  const kcal = parseInt(document.getElementById('ex-custom-kcal').value);
+  if(!name||!kcal||kcal<=0) return;
+  const saveLib = document.getElementById('ex-save-lib').checked;
+  if(saveLib){
+    const lib = getMyExLib();
+    const id = 'mye_' + Date.now();
+    lib.push({id, name, kcal, note:'Tự thêm', icon:'⭐'});
+    saveMyExLib(lib);
+    renderMyExLib();
+  }
+  _addEntry(name, kcal, 'out');
+  document.getElementById('ex-custom-name').value='';
+  document.getElementById('ex-custom-kcal').value='';
+}
+
+// ─── MY LIBRARIES (localStorage) ─────────────────────────
+function getMyFoodLib(){ try{ return JSON.parse(localStorage.getItem('calo_myfoods')||'[]'); }catch(e){ return []; } }
+function saveMyFoodLib(d){ localStorage.setItem('calo_myfoods', JSON.stringify(d)); }
+function getMyExLib(){ try{ return JSON.parse(localStorage.getItem('calo_myex')||'[]'); }catch(e){ return []; } }
+function saveMyExLib(d){ localStorage.setItem('calo_myex', JSON.stringify(d)); }
+
+function renderMyFoodLib(){
+  const lib = getMyFoodLib();
+  const wrap = document.getElementById('food-mylib-wrap');
+  const grid = document.getElementById('food-mylib-grid');
+  const cnt = document.getElementById('food-mylib-count');
+  if(!lib.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  cnt.textContent = lib.length + ' mục';
+  grid.innerHTML = lib.map(f => {
+    const sel = selFood && selFood.id===f.id;
+    return `<div class="mylib-fbtn${sel?' sel':''}" onclick="selectMyFood('${f.id}')">
+      <button class="mylib-del" onclick="deleteMyFood('${f.id}',event)" title="Xoá khỏi thư viện">✕</button>
+      <span class="fn">${f.name}</span>
+      <span class="fm">${f.kcal} kcal / ${f.unit}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderMyExLib(){
+  const lib = getMyExLib();
+  const wrap = document.getElementById('ex-mylib-wrap');
+  const grid = document.getElementById('ex-mylib-grid');
+  const cnt = document.getElementById('ex-mylib-count');
+  if(!lib.length){ wrap.style.display='none'; return; }
+  wrap.style.display='block';
+  cnt.textContent = lib.length + ' mục';
+  grid.innerHTML = lib.map(e => {
+    const sel = selMyEx && selMyEx.id===e.id;
+    return `<div class="mylib-ex-card${sel?' sel-out':''}" onclick="selectMyEx('${e.id}')">
+      <div class="ex-icon">${e.icon||'⭐'}</div>
+      <div class="ex-info">
+        <span class="ex-name">${e.name}</span>
+        <span class="ex-note">${e.note||''}</span>
+      </div>
+      <div class="ex-kcal-badge" style="margin-right:20px">
+        <span class="ex-kcal-main" style="color:var(--red)">−${e.kcal} <span style="font-size:10px;font-weight:500">kcal</span></span>
+        <span class="ex-kcal-sub">mỗi lần</span>
+      </div>
+      <button class="mylib-ex-del" onclick="deleteMyEx('${e.id}',event)" title="Xoá khỏi thư viện">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// My food lib select
+function selectMyFood(id){
+  const lib = getMyFoodLib();
+  selFood = lib.find(f=>f.id===id) || null;
+  filterFoods(); renderMyFoodLib();
+  const qrow = document.getElementById('food-qrow');
+  const addBtn = document.getElementById('food-add-btn');
+  if(selFood){
+    qrow.style.display='grid'; addBtn.style.display='block';
+    document.getElementById('food-qlabel').textContent = `Số lượng (${selFood.unit})`;
+    document.getElementById('food-qty').value = 1;
+    document.getElementById('food-qty').step = 1;
+    updateFoodPreview();
+    setTimeout(()=>qrow.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+// My ex lib select — tap once to add immediately
+let selMyEx = null;
+function selectMyEx(id){
+  const lib = getMyExLib();
+  const item = lib.find(e=>e.id===id);
+  if(!item) return;
+  _addEntry(item.name, item.kcal, 'out');
+  // flash selected state briefly
+  selMyEx = item; renderMyExLib();
+  setTimeout(()=>{ selMyEx=null; renderMyExLib(); }, 600);
+}
+
+function deleteMyFood(id, e){
+  e.stopPropagation();
+  if(!confirm('Xoá khỏi thư viện?')) return;
+  const lib = getMyFoodLib().filter(f=>f.id!==id);
+  saveMyFoodLib(lib);
+  if(selFood && selFood.id===id){ selFood=null; updateFoodPreview(); document.getElementById('food-qrow').style.display='none'; document.getElementById('food-add-btn').style.display='none'; }
+  renderMyFoodLib();
+}
+
+function deleteMyEx(id, e){
+  e.stopPropagation();
+  if(!confirm('Xoá khỏi thư viện?')) return;
+  const lib = getMyExLib().filter(ex=>ex.id!==id);
+  saveMyExLib(lib);
+  renderMyExLib();
+}
+function buildExCats(){
+  document.getElementById('ex-cats').innerHTML = EX_CATS.map(c =>
+    `<div class="ctag${c.id===exCat?' on-out':''}" onclick="setExCat('${c.id}')">${c.label}</div>`
+  ).join('');
+}
+function setExCat(id){ exCat=id; buildExCats(); filterExercises(); }
+
+function getIntensityColor(met){
+  if(met <= 2.0) return '#888';         // nghỉ ngơi - xám
+  if(met <= 3.5) return '#4A90D9';      // nhẹ - xanh dương
+  if(met <= 5.5) return '#27AE60';      // vừa - xanh lá
+  if(met <= 8.0) return '#E67E22';      // khá mạnh - cam
+  return '#E24B4A';                     // cao - đỏ
+}
+
+function filterExercises(){
+  const q = (document.getElementById('ex-search').value||'').toLowerCase();
+  let list = exCat==='all' ? EXERCISES : EXERCISES.filter(e=>e.cat===exCat);
+  if(q) list = list.filter(e=>e.name.toLowerCase().includes(q)||e.note.toLowerCase().includes(q));
+  const w = getWeight();
+  document.getElementById('ex-grid').innerHTML = list.map(e => {
+    const kpm = (e.met * w / 60).toFixed(1);   // kcal per minute
+    const k30 = Math.round(e.met * w * 30/60);  // kcal for 30 min
+    const icolor = getIntensityColor(e.met);
+    const sel = selEx && selEx.id===e.id;
+    return `<div class="ex-card${sel?' sel-out':''}" onclick="selectEx('${e.id}')">
+      <div class="ex-icon">${e.icon||'🏃'}</div>
+      <div class="ex-info">
+        <span class="ex-name">${e.name}</span>
+        <span class="ex-note">${e.note}</span>
+      </div>
+      <div class="ex-kcal-badge">
+        <span class="ex-kcal-main" style="color:${icolor}">−${kpm} <span style="font-size:10px;font-weight:500">kcal/ph</span></span>
+        <span class="ex-kcal-sub">~${k30} kcal / 30ph</span>
+      </div>
+    </div>`;
+  }).join('') || '<div style="font-size:13px;color:var(--text2);padding:12px;text-align:center">Không tìm thấy</div>';
+}
+
+function renderExerciseLib(){ filterExercises(); }
+
+function selectEx(id){
+  selEx = EXERCISES.find(e=>e.id===id);
+  selMyEx = null;
+  filterExercises(); renderMyExLib();
+  const qrow = document.getElementById('ex-qrow');
+  const addBtn = document.getElementById('ex-add-btn');
+  if(selEx){
+    qrow.style.display='grid'; addBtn.style.display='block';
+    document.getElementById('ex-min').value=30;
+    updateExPreview();
+    setTimeout(()=>qrow.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  } else { qrow.style.display='none'; addBtn.style.display='none'; document.getElementById('ex-preview').textContent=''; }
+}
+
+function calcExKcal(ex, minutes){
+  const w = getWeight();
+  return Math.round(ex.met * w * minutes / 60);
+}
+
+function updateExPreview(){
+  if(!selEx){ document.getElementById('ex-preview').textContent=''; return; }
+  const min = parseFloat(document.getElementById('ex-min').value)||0;
+  const k = calcExKcal(selEx, min);
+  const w = getWeight();
+  document.getElementById('ex-preview').textContent = `${selEx.name} — ${min} phút × ${w}kg → ${k} kcal`;
+}
+
+function addFromExLib(){
+  if(!selEx) return;
+  const min = parseFloat(document.getElementById('ex-min').value)||0;
+  if(!min) return;
+  const k = calcExKcal(selEx, min);
+  _addEntry(`${selEx.name} (${min} phút)`, k, 'out');
+  selEx=null;
+  document.getElementById('ex-qrow').style.display='none';
+  document.getElementById('ex-add-btn').style.display='none';
+  document.getElementById('ex-preview').textContent='';
+  filterExercises();
+}
+
+// ─── ENTRIES & RENDER ─────────────────────────────────────
+function _addEntry(name, kcal, type){
+  const data = getData();
+  const k = dateKey(curDate);
+  if(!data[k]) data[k]=[];
+  data[k].push({id:Date.now(), name, kcal, type});
+  saveData(data); render();
+  setTimeout(()=>document.getElementById('entries').scrollIntoView({behavior:'smooth',block:'start'}),150);
+}
+
+function deleteEntry(id){
+  if(!confirm('Xoá mục này?')) return;
+  const data = getData();
+  const k = dateKey(curDate);
+  if(data[k]) data[k]=data[k].filter(e=>e.id!==id);
+  saveData(data); render();
+}
+
+function render(){
+  const data = getData();
+  const k = dateKey(curDate);
+  const entries = data[k]||[];
+  const goal = getGoal();
+  document.getElementById('goalInput').value = goal;
+  document.getElementById('weightInput').value = getWeight();
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const diff = Math.round((curDate-today)/86400000);
+  const dayStr = diff===0?'Hôm nay':diff===-1?'Hôm qua':diff===1?'Ngày mai'
+    :curDate.toLocaleDateString('vi-VN',{weekday:'short',day:'2-digit',month:'2-digit'});
+  document.getElementById('dayLbl').textContent = dayStr;
+  document.getElementById('listTitle').textContent = dayStr;
+
+  const totalIn  = entries.filter(e=>e.type==='in').reduce((s,e)=>s+e.kcal,0);
+  const totalOut = entries.filter(e=>e.type==='out').reduce((s,e)=>s+e.kcal,0);
+  const net = totalIn - totalOut;
+  const diff2 = net - goal;
+  const netColor = net>goal?'var(--red)':net<goal*0.75?'var(--green)':'var(--amber)';
+
+  document.getElementById('summary').innerHTML = `
+    <div class="mc"><div class="lb">🍽 Nạp vào</div><div class="vl" style="color:var(--green)">${totalIn.toLocaleString()} <span class="ut">kcal</span></div></div>
+    <div class="mc"><div class="lb">🔥 Tiêu hao</div><div class="vl" style="color:var(--red)">${totalOut.toLocaleString()} <span class="ut">kcal</span></div></div>
+    <div class="mc"><div class="lb">⚖️ Ròng (in−out)</div><div class="vl" style="color:${netColor}">${net.toLocaleString()} <span class="ut">kcal</span></div></div>
+    <div class="mc"><div class="lb">🎯 So với mục tiêu</div><div class="vl" style="color:${diff2>0?'var(--red)':'var(--green)'}">${diff2>0?'+':''}${diff2.toLocaleString()} <span class="ut">kcal</span></div></div>
+  `;
+
+  const pct = Math.min(100, Math.round(net/goal*100));
+  const bc = pct>100?'#E24B4A':pct>85?'#BA7517':'#3B6D11';
+  document.getElementById('prog').innerHTML = `
+    <div class="prog-lb"><span>0</span><span>Mục tiêu: ${goal.toLocaleString()} kcal</span></div>
+    <div class="prog-bg"><div class="prog-fill" style="width:${pct}%;background:${bc}"></div></div>
+    <div class="prog-lb"><span style="color:${bc};font-weight:700">${pct}%</span><span>${pct>100?'Vượt '+Math.round(net-goal)+' kcal':Math.round(goal-net)+' kcal còn lại'}</span></div>
+  `;
+
+  const el = document.getElementById('entries');
+  if(!entries.length){
+    el.innerHTML='<div class="empty">Chưa có mục nào.<br>Thêm bữa ăn hoặc hoạt động bên trên ☝️</div>';
+    return;
+  }
+  el.innerHTML = [...entries].reverse().map(e=>`
+    <div class="entry">
+      <div class="dot ${e.type==='in'?'di':'do'}"></div>
+      <div class="en">${e.name}</div>
+      <span class="ety ${e.type==='in'?'tyi':'tyo'}">${e.type==='in'?'Nạp vào':'Tiêu hao'}</span>
+      <div class="ek ${e.type==='in'?'eki':'eko'}">${e.type==='in'?'+':'−'}${e.kcal.toLocaleString()}</div>
+      <button class="dbtn" onclick="deleteEntry(${e.id})" aria-label="Xoá">✕</button>
+    </div>
+  `).join('');
+}
+
+// Init
+buildFoodCats(); filterFoods();
+buildExCats(); filterExercises();
+render();
+renderMyFoodLib();
+renderMyExLib();
+
+document.getElementById('food-qty').addEventListener('keydown',e=>{if(e.key==='Enter')addFromFoodLib();});
+document.getElementById('ex-min').addEventListener('keydown',e=>{if(e.key==='Enter')addFromExLib();});
+document.getElementById('food-custom-kcal').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomFood();});
+document.getElementById('ex-custom-kcal').addEventListener('keydown',e=>{if(e.key==='Enter')addCustomExercise();});
+</script>
+</body>
+</html>
